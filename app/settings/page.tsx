@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FiBell, FiGlobe, FiShield, FiCreditCard } from 'react-icons/fi';
 import Card from '../components/Card';
 import MobileContainer from '../components/MobileContainer';
 import Button from '../components/Button';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState({
     newRequests: true,
     extensions: true,
@@ -102,8 +104,19 @@ export default function SettingsPage() {
                 Edit
               </Button>
             </div>
-            <Button variant="outline" fullWidth>
+            <Button 
+              variant="outline" 
+              fullWidth
+              onClick={() => router.push('/settings/payment/add-upi')}
+            >
               Add UPI ID
+            </Button>
+            <Button 
+              variant="outline" 
+              fullWidth
+              onClick={() => router.push('/settings/payment/add-card')}
+            >
+              Add Card
             </Button>
           </div>
         </Card>
