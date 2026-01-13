@@ -9,7 +9,7 @@ import { IoHomeSharp, IoHome } from 'react-icons/io5';
 import { IoWallet, IoWalletOutline } from 'react-icons/io5';
 import { FaUserCircle, FaRegUserCircle } from 'react-icons/fa';
 import { IoSettings, IoSettingsOutline } from 'react-icons/io5';
-import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore, PartnerStatus } from '../store/useAuthStore';
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -53,7 +53,32 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
     },
   ];
 
-  const isOnline = user?.isOnline ?? false;
+  const currentStatus: PartnerStatus = user?.status ?? 'offline';
+  
+  const getStatusConfig = (status: PartnerStatus) => {
+    switch (status) {
+      case 'online':
+        return {
+          label: 'Online',
+          color: 'bg-green-300 shadow-[0_0_8px_rgba(34,197,94,0.6)]',
+          bgColor: 'bg-white/20 border-white/30 shadow-lg',
+        };
+      case 'ontrip':
+        return {
+          label: 'On Trip',
+          color: 'bg-blue-300 shadow-[0_0_8px_rgba(59,130,246,0.6)]',
+          bgColor: 'bg-white/20 border-white/30 shadow-lg',
+        };
+      default:
+        return {
+          label: 'Offline',
+          color: 'bg-white/50',
+          bgColor: 'bg-white/10 border-white/20',
+        };
+    }
+  };
+
+  const statusConfig = getStatusConfig(currentStatus);
 
   // Get page title based on pathname
   const getPageTitle = () => {
@@ -114,20 +139,19 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              isOnline 
-                ? 'bg-white/20 border border-white/30 shadow-lg' 
-                : 'bg-white/10 border border-white/20'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${statusConfig.bgColor} border`}
           >
             <motion.div
-              animate={{ scale: isOnline ? [1, 1.2, 1] : 1 }}
-              transition={{ duration: 2, repeat: isOnline ? Infinity : 0 }}
-              className={`h-2 w-2 rounded-full ${
-                isOnline ? 'bg-green-300 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-white/50'
-              }`}
+              animate={{ 
+                scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1 
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: currentStatus === 'online' || currentStatus === 'ontrip' ? Infinity : 0 
+              }}
+              className={`h-2 w-2 rounded-full ${statusConfig.color}`}
             />
-            <span className="text-white/90">{isOnline ? 'Online' : 'Offline'}</span>
+            <span className="text-white/90">{statusConfig.label}</span>
           </motion.div>
         </div>
       </motion.header>

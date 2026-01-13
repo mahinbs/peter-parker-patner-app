@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FiCamera, FiCheck, FiX, FiDroplet, FiActivity } from 'react-icons/fi';
+import { FiCamera, FiCheck, FiX, FiDroplet, FiActivity, FiMapPin, FiCheckCircle } from 'react-icons/fi';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
@@ -11,11 +11,14 @@ import MobileContainer from '../../components/MobileContainer';
 export default function VehiclePickupPage() {
   const router = useRouter();
   const params = useParams();
-  const [step, setStep] = useState<'inspection' | 'confirmation'>('inspection');
+  const [step, setStep] = useState<'inspection' | 'confirmation' | 'parking'>('inspection');
   const [images, setImages] = useState<Record<string, string>>({});
   const [dents, setDents] = useState<string[]>([]);
   const [fuelLevel, setFuelLevel] = useState(50);
   const [odometer, setOdometer] = useState('');
+  const [parkingSlot, setParkingSlot] = useState('');
+  const [parkingLocation, setParkingLocation] = useState('');
+  const [isParked, setIsParked] = useState(false);
 
   const imageTypes = [
     { key: 'front', label: 'Front' },
@@ -49,7 +52,14 @@ export default function VehiclePickupPage() {
   };
 
   const handleConfirm = () => {
-    router.push('/sessions/123');
+    setStep('parking');
+  };
+
+  const handleParkingConfirm = () => {
+    if (parkingSlot && parkingLocation && isParked) {
+      // Update status to online after parking
+      router.push('/sessions/123');
+    }
   };
 
   if (step === 'confirmation') {
@@ -75,6 +85,82 @@ export default function VehiclePickupPage() {
                 />
                 <Button onClick={handleConfirm} fullWidth>
                   Confirm Handover
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </MobileContainer>
+    );
+  }
+
+  if (step === 'parking') {
+    return (
+      <MobileContainer>
+        <div className="p-4 space-y-6">
+          <Card>
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="inline-flex p-4 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
+                  <FiMapPin className="text-blue-600 dark:text-blue-400" size={32} />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  Confirm Vehicle Parking
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Please provide parking details to confirm the vehicle is parked
+                </p>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Input
+                  label="Parking Location"
+                  placeholder="e.g., Downtown Parking"
+                  value={parkingLocation}
+                  onChange={(e) => setParkingLocation(e.target.value)}
+                  icon={<FiMapPin />}
+                />
+                <Input
+                  label="Parking Slot Number"
+                  placeholder="e.g., A-12"
+                  value={parkingSlot}
+                  onChange={(e) => setParkingSlot(e.target.value)}
+                />
+                
+                <Card className={`border-2 transition-all ${
+                  isParked 
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}>
+                  <button
+                    onClick={() => setIsParked(!isParked)}
+                    className="w-full flex items-center gap-3"
+                  >
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                      isParked
+                        ? 'border-green-500 bg-green-500'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}>
+                      {isParked && <FiCheckCircle className="text-white" size={16} />}
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                        Vehicle is parked
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Confirm that the vehicle has been safely parked at the location
+                      </p>
+                    </div>
+                  </button>
+                </Card>
+
+                <Button 
+                  onClick={handleParkingConfirm} 
+                  fullWidth
+                  disabled={!parkingSlot || !parkingLocation || !isParked}
+                >
+                  <FiCheckCircle size={18} />
+                  Confirm Parking
                 </Button>
               </div>
             </div>

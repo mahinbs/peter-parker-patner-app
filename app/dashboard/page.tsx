@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiPower, 
   FiDollarSign, 
@@ -10,16 +10,19 @@ import {
   FiClock, 
   FiAlertCircle,
   FiCheckCircle,
-  FiNavigation
+  FiNavigation,
+  FiChevronDown
 } from 'react-icons/fi';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import MobileContainer from '../components/MobileContainer';
-import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore, PartnerStatus } from '../store/useAuthStore';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, toggleOnline } = useAuthStore();
+  const { user, setStatus } = useAuthStore();
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [stats, setStats] = useState({
     earningsToday: 1250,
@@ -66,55 +69,154 @@ export default function DashboardPage() {
     },
   ]);
 
-  const isOnline = user?.isOnline ?? false;
+  const currentStatus: PartnerStatus = user?.status ?? 'offline';
+  const city = user?.city ?? 'Not Set';
+  const zone = user?.zone ?? 'Not Set';
 
-  const handleToggle = () => {
-    toggleOnline();
+  const statusOptions: { value: PartnerStatus; label: string; color: string; bgColor: string }[] = [
+    { value: 'online', label: 'Online', color: 'text-green-600', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+    { value: 'ontrip', label: 'On Trip', color: 'text-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
+    { value: 'offline', label: 'Offline', color: 'text-gray-600', bgColor: 'bg-gray-50 dark:bg-gray-900/20' },
+  ];
+
+  const currentStatusConfig = statusOptions.find(opt => opt.value === currentStatus) || statusOptions[2];
+
+  const handleStatusChange = (status: PartnerStatus) => {
+    setStatus(status);
+    setIsStatusDropdownOpen(false);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+
+    if (isStatusDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isStatusDropdownOpen]);
 
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
-        {/* Online/Offline Toggle */}
+        {/* Status Dropdown */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           <Card className="hover-lift">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[var(--text-secondary)] mb-1">Status</p>
-                <motion.p 
-                  key={isOnline ? 'online' : 'offline'}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={`text-lg font-bold ${
-                    isOnline 
-                      ? 'text-[var(--color-secondary-accent)]' 
-                      : 'text-[var(--text-tertiary)]'
-                  }`}
-                >
-                  {isOnline ? 'Online' : 'Offline'}
-                </motion.p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-[var(--text-secondary)] mb-1">Status</p>
+                  <motion.p 
+                    key={currentStatus}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`text-lg font-bold ${currentStatusConfig.color}`}
+                  >
+                    {currentStatusConfig.label}
+                  </motion.p>
+                </div>
+                <div className="relative" ref={dropdownRef}>
+                  <motion.button
+                    onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${
+                      currentStatus === 'online'
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        : currentStatus === 'ontrip'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
+                    }`}
+                  >
+                    <motion.div
+                      animate={{ 
+                        scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1 
+                      }}
+                      transition={{ duration: 2, repeat: currentStatus === 'online' || currentStatus === 'ontrip' ? Infinity : 0 }}
+                      className={`h-2 w-2 rounded-full ${
+                        currentStatus === 'online'
+                          ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+                          : currentStatus === 'ontrip'
+                          ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
+                          : 'bg-gray-400'
+                      }`}
+                    />
+                    <span className={`text-sm font-semibold ${currentStatusConfig.color}`}>
+                      {currentStatusConfig.label}
+                    </span>
+                    <FiChevronDown 
+                      className={`transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''} ${currentStatusConfig.color}`}
+                      size={16}
+                    />
+                  </motion.button>
+                  
+                  <AnimatePresence>
+                    {isStatusDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+                      >
+                        {statusOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => handleStatusChange(option.value)}
+                            className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                              currentStatus === option.value
+                                ? `${option.bgColor} ${option.color} font-semibold`
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <div
+                              className={`h-2 w-2 rounded-full ${
+                                option.value === 'online'
+                                  ? 'bg-green-500'
+                                  : option.value === 'ontrip'
+                                  ? 'bg-blue-500'
+                                  : 'bg-gray-400'
+                              }`}
+                            />
+                            <span>{option.label}</span>
+                            {currentStatus === option.value && (
+                              <FiCheckCircle className="ml-auto" size={18} />
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-              <motion.button
-                onClick={handleToggle}
-                whileTap={{ scale: 0.95 }}
-                className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-                  isOnline 
-                    ? 'bg-[var(--color-secondary-accent)] shadow-lg shadow-[var(--color-secondary-accent)]/30' 
-                    : 'bg-[var(--neutral-300)]'
-                }`}
-              >
-                <motion.span
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md ${
-                    isOnline ? 'left-[calc(100%-1.5rem)]' : 'left-0.5'
-                  }`}
-                />
-              </motion.button>
+
+              {/* City and Zone Display */}
+              <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">Current Location</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {city}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">Zone</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {zone}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </Card>
         </motion.div>
