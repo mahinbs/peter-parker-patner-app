@@ -8,6 +8,8 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Card from '../../components/Card';
 import Image from 'next/image';
+import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface LoginForm {
   phone: string;
@@ -16,22 +18,57 @@ interface LoginForm {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'phone' | 'otp' | 'password'>('phone');
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<LoginForm>();
+  const { fetchProfile } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handlePhoneSubmit = (data: LoginForm) => {
-    // Simulate OTP send
-    setStep('otp');
+  const handlePhoneSubmit = async (data: LoginForm) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: `+91${data.phone}`,
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        setStep('otp');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleOTPSubmit = () => {
-    setStep('password');
-  };
+  const handleOTPSubmit = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const otpString = otp.join('');
+      // For this app's flow, we might just be verifying phone. 
+      // If it's a full sign in:
+      const { phone } = watch(); // phone from useForm
+      const { error } = await supabase.auth.verifyOtp({
+        phone: `+91${phone}`,
+        token: otpString,
+        type: 'sms'
+      });
 
-  const handlePasswordSubmit = (data: LoginForm) => {
-    // Simulate login
-    router.push('/kyc/status');
+      if (error) {
+        setError(error.message);
+      } else {
+        await fetchProfile();
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOTPChange = (index: number, value: string) => {
@@ -39,7 +76,7 @@ export default function LoginPage() {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    
+
     // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
@@ -79,9 +116,10 @@ export default function LoginPage() {
                 })}
                 error={errors.phone?.message}
               />
-              <Button type="submit" fullWidth>
+              <Button type="submit" fullWidth loading={loading}>
                 Send OTP
               </Button>
+              {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{' '}
                 <button
@@ -119,9 +157,10 @@ export default function LoginPage() {
                   />
                 ))}
               </div>
-              <Button onClick={handleOTPSubmit} fullWidth>
+              <Button onClick={handleOTPSubmit} fullWidth loading={loading}>
                 Verify OTP
               </Button>
+              {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
               <button
                 type="button"
                 onClick={() => setStep('phone')}
@@ -132,37 +171,8 @@ export default function LoginPage() {
             </div>
           )}
 
-          {step === 'password' && (
-            <form onSubmit={handleSubmit(handlePasswordSubmit)} className="space-y-6">
-              <Input
-                label="Password"
-                type="password"
-                icon={<FiLock />}
-                placeholder="Enter your password"
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters',
-                  },
-                })}
-                error={errors.password?.message}
-              />
-              <Button type="submit" fullWidth>
-                Sign In
-              </Button>
-              <button
-                type="button"
-                onClick={() => setStep('otp')}
-                className="w-full text-center text-sm text-teal-600 dark:text-teal-400"
-              >
-                Back
-              </button>
-            </form>
-          )}
         </Card>
       </div>
     </div>
   );
 }
-

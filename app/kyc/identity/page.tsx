@@ -6,6 +6,7 @@ import { FiUpload, FiCamera, FiCheck } from 'react-icons/fi';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
 
 export default function KYCIdentityPage() {
   const router = useRouter();
@@ -25,7 +26,16 @@ export default function KYCIdentityPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // In a real app, we would upload images to Supabase Storage and save URLs
+      // For now, we'll just update the profile status to 'pending'
+      await supabase
+        .from('profiles')
+        .update({ kyc_status: 'pending' })
+        .eq('id', user.id);
+    }
     router.push('/kyc/qualification');
   };
 
@@ -52,11 +62,10 @@ export default function KYCIdentityPage() {
                   <button
                     key={type}
                     onClick={() => setIdType(type)}
-                    className={`p-3 rounded-xl border-2 transition-colors ${
-                      idType === type
+                    className={`p-3 rounded-xl border-2 transition-colors ${idType === type
                         ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
                         : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                      }`}
                   >
                     <span className="text-sm font-medium capitalize">{type}</span>
                   </button>

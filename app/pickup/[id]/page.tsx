@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
 
 export default function VehiclePickupPage() {
   const router = useRouter();
@@ -51,14 +52,33 @@ export default function VehiclePickupPage() {
     setStep('confirmation');
   };
 
-  const handleConfirm = () => {
-    setStep('parking');
+  const handleConfirm = async () => {
+    // In a real app, verify OTP here
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'valet_enroute_drop' })
+      .eq('id', params.id);
+
+    if (!error) {
+      setStep('parking');
+    }
   };
 
-  const handleParkingConfirm = () => {
+  const handleParkingConfirm = async () => {
     if (parkingSlot && parkingLocation && isParked) {
-      // Update status to online after parking
-      router.push('/sessions/123');
+      const fullParkingLocation = `${parkingLocation} - Slot ${parkingSlot}`;
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          status: 'parked',
+          parking_location: fullParkingLocation,
+          parked_at: new Date().toISOString()
+        })
+        .eq('id', params.id);
+
+      if (!error) {
+        router.push(`/sessions/${params.id}`);
+      }
     }
   };
 
@@ -126,21 +146,19 @@ export default function VehiclePickupPage() {
                   value={parkingSlot}
                   onChange={(e) => setParkingSlot(e.target.value)}
                 />
-                
-                <Card className={`border-2 transition-all ${
-                  isParked 
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+
+                <Card className={`border-2 transition-all ${isParked
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                     : 'border-gray-300 dark:border-gray-600'
-                }`}>
+                  }`}>
                   <button
                     onClick={() => setIsParked(!isParked)}
                     className="w-full flex items-center gap-3"
                   >
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                      isParked
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isParked
                         ? 'border-green-500 bg-green-500'
                         : 'border-gray-300 dark:border-gray-600'
-                    }`}>
+                      }`}>
                       {isParked && <FiCheckCircle className="text-white" size={16} />}
                     </div>
                     <div className="text-left">
@@ -154,8 +172,8 @@ export default function VehiclePickupPage() {
                   </button>
                 </Card>
 
-                <Button 
-                  onClick={handleParkingConfirm} 
+                <Button
+                  onClick={handleParkingConfirm}
                   fullWidth
                   disabled={!parkingSlot || !parkingLocation || !isParked}
                 >
@@ -241,11 +259,10 @@ export default function VehiclePickupPage() {
                   <button
                     key={area}
                     onClick={() => toggleDent(area)}
-                    className={`p-3 rounded-xl border-2 transition-colors text-sm ${
-                      dents.includes(area)
+                    className={`p-3 rounded-xl border-2 transition-colors text-sm ${dents.includes(area)
                         ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
                         : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                      }`}
                   >
                     {area}
                   </button>

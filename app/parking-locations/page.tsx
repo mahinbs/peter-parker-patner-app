@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiPlus, FiMapPin, FiEdit, FiTrash2, FiCheckCircle } from 'react-icons/fi';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import MobileContainer from '../components/MobileContainer';
+import { supabase } from '../lib/supabase';
 
 interface ParkingLocation {
   id: string;
@@ -19,26 +20,47 @@ interface ParkingLocation {
 
 export default function ParkingLocationsPage() {
   const router = useRouter();
-  const [locations, setLocations] = useState<ParkingLocation[]>([
-    {
-      id: '1',
-      name: 'Downtown Parking',
-      address: '123 Main St, City Center',
-      totalSlots: 20,
-      availableSlots: 12,
-      basePrice: 50,
-      isActive: true,
-    },
-    {
-      id: '2',
-      name: 'Mall Parking',
-      address: '456 Park Ave, Shopping District',
-      totalSlots: 15,
-      availableSlots: 8,
-      basePrice: 60,
-      isActive: true,
-    },
-  ]);
+  const [locations, setLocations] = useState<ParkingLocation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLocations = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('parking_locations')
+        .select('*')
+        .eq('partner_id', user.id);
+
+      if (data) {
+        setLocations(data.map(l => ({
+          id: l.id,
+          name: l.name,
+          address: l.address,
+          totalSlots: l.total_slots,
+          availableSlots: l.available_slots,
+          basePrice: 50, // Default for now
+          isActive: true, // Default for now
+        })));
+      }
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLocations();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase
+      .from('parking_locations')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      setLocations(prev => prev.filter(l => l.id !== id));
+    }
+  };
 
   return (
     <MobileContainer>
@@ -91,7 +113,7 @@ export default function ParkingLocationsPage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Slots</p>
@@ -118,9 +140,7 @@ export default function ParkingLocationsPage() {
                       Edit
                     </Button>
                     <Button
-                      onClick={() => {
-                        setLocations(prev => prev.filter(l => l.id !== location.id));
-                      }}
+                      onClick={() => handleDelete(location.id)}
                       variant="danger"
                       size="sm"
                       className="flex-1"

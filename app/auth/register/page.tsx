@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Card from '../../components/Card';
 import Image from 'next/image';
+import { supabase } from '../../lib/supabase';
 
 interface RegisterForm {
   name: string;
@@ -21,23 +22,56 @@ interface RegisterForm {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'details' | 'otp' | 'password'>('details');
+  const [step, setStep] = useState<'details' | 'otp'>('details');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>();
-
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const password = watch('password');
 
-  const handleDetailsSubmit = (data: RegisterForm) => {
-    setStep('otp');
+  const handleDetailsSubmit = async (data: RegisterForm) => {
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: `+91${data.phone}`,
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setStep('otp');
+    }
   };
 
-  const handleOTPSubmit = () => {
-    setStep('password');
-  };
+  const handleOTPSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    const otpString = otp.join('');
+    const { phone } = watch();
+    const { error, data } = await supabase.auth.verifyOtp({
+      phone: `+91${phone}`,
+      token: otpString,
+      type: 'sms'
+    });
+    setLoading(false);
 
-  const handlePasswordSubmit = (data: RegisterForm) => {
-    // Simulate registration
-    router.push('/kyc/identity');
+    if (error) {
+      setError(error.message);
+    } else {
+      // After verification, we could set a password if needed, but for now let's create a profile
+      const { name, email, city, operatingArea } = watch();
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          name,
+          email,
+          city,
+          zone: operatingArea,
+          role: 'partner',
+        });
+      }
+      router.push('/kyc/identity');
+    }
   };
 
   const handleOTPChange = (index: number, value: string) => {
@@ -45,7 +79,7 @@ export default function RegisterPage() {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    
+
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
@@ -128,9 +162,10 @@ export default function RegisterPage() {
                 })}
                 error={errors.operatingArea?.message}
               />
-              <Button type="submit" fullWidth>
+              <Button type="submit" fullWidth loading={loading}>
                 Continue
               </Button>
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Already have an account?{' '}
                 <button
@@ -168,9 +203,10 @@ export default function RegisterPage() {
                   />
                 ))}
               </div>
-              <Button onClick={handleOTPSubmit} fullWidth>
+              <Button onClick={handleOTPSubmit} fullWidth loading={loading}>
                 Verify OTP
               </Button>
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
               <button
                 type="button"
                 onClick={() => setStep('details')}
@@ -181,49 +217,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {step === 'password' && (
-            <form onSubmit={handleSubmit(handlePasswordSubmit)} className="space-y-4">
-              <Input
-                label="Password"
-                type="password"
-                icon={<FiLock />}
-                placeholder="Create a password"
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters',
-                  },
-                })}
-                error={errors.password?.message}
-              />
-              <Input
-                label="Confirm Password"
-                type="password"
-                icon={<FiLock />}
-                placeholder="Confirm your password"
-                {...register('confirmPassword', {
-                  required: 'Please confirm your password',
-                  validate: (value) =>
-                    value === password || 'Passwords do not match',
-                })}
-                error={errors.confirmPassword?.message}
-              />
-              <Button type="submit" fullWidth>
-                Create Account
-              </Button>
-              <button
-                type="button"
-                onClick={() => setStep('otp')}
-                className="w-full text-center text-sm text-teal-600 dark:text-teal-400"
-              >
-                Back
-              </button>
-            </form>
-          )}
         </Card>
       </div>
     </div>
   );
 }
-

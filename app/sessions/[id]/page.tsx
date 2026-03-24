@@ -6,20 +6,52 @@ import { FiClock, FiMapPin, FiCamera, FiCheckCircle } from 'react-icons/fi';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import MobileContainer from '../../components/MobileContainer';
-import { format } from 'date-fns';
+import { format, differenceInSeconds } from 'date-fns';
+import { supabase } from '../../lib/supabase';
 
 export default function ActiveSessionPage() {
   const router = useRouter();
   const params = useParams();
-  const [remainingTime, setRemainingTime] = useState(5400); // 90 minutes in seconds
+  const [remainingTime, setRemainingTime] = useState(0);
   const [isExtended, setIsExtended] = useState(false);
+  const [booking, setBooking] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setRemainingTime(prev => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const fetchBooking = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (data && !error) {
+        setBooking(data);
+        if (data.parked_at) {
+          const parkedAt = new Date(data.parked_at);
+          const now = new Date();
+          const elapsed = differenceInSeconds(now, parkedAt);
+          const totalDuration = 5400; // 90 mins default
+          setRemainingTime(Math.max(0, totalDuration - elapsed));
+        }
+      }
+      setIsLoading(false);
+    };
+
+    if (params.id) {
+      fetchBooking();
+    }
+  }, [params.id]);
+
+  useEffect(() => {
+    if (remainingTime > 0) {
+      const timer = setInterval(() => {
+        setRemainingTime(prev => Math.max(0, prev - 1));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [remainingTime]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -32,8 +64,24 @@ export default function ActiveSessionPage() {
   };
 
   const handleReturn = () => {
-    router.push('/return/123');
+    router.push(`/return/${params.id}`);
   };
+
+  if (isLoading) {
+    return (
+      <MobileContainer>
+        <div className="p-4 text-center">Loading session details...</div>
+      </MobileContainer>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <MobileContainer>
+        <div className="p-4 text-center text-red-500">Session not found.</div>
+      </MobileContainer>
+    );
+  }
 
   return (
     <MobileContainer>
@@ -43,7 +91,7 @@ export default function ActiveSessionPage() {
             Active Parking Session
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Vehicle: MH-12-AB-1234
+            Vehicle: {booking.vehicle_number} ({booking.vehicle_type})
           </p>
         </div>
 
@@ -52,15 +100,14 @@ export default function ActiveSessionPage() {
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Remaining Time</p>
-                <p className={`text-2xl font-bold ${
-                  remainingTime < 900 ? 'text-red-500' : 'text-teal-600 dark:text-teal-400'
-                }`}>
+                <p className={`text-2xl font-bold ${remainingTime < 900 ? 'text-red-500' : 'text-teal-600 dark:text-teal-400'
+                  }`}>
                   {formatTime(remainingTime)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Slot Number</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">A-12</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Location Status</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{booking.status}</p>
               </div>
             </div>
 
@@ -72,7 +119,7 @@ export default function ActiveSessionPage() {
                     Start Time
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {format(new Date(), 'h:mm a')}
+                    {booking.started_at ? format(new Date(booking.started_at), 'h:mm a') : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -84,7 +131,7 @@ export default function ActiveSessionPage() {
                     Parking Location
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Downtown Parking - Slot A-12
+                    {booking.parking_location || 'N/A'}
                   </p>
                 </div>
               </div>

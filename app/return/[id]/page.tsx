@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FiCamera, FiCheck, FiX, FiDroplet, FiActivity, FiAlertCircle } from 'react-icons/fi';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
 
 export default function VehicleReturnPage() {
   const router = useRouter();
@@ -17,7 +18,32 @@ export default function VehicleReturnPage() {
   const [fuelLevel, setFuelLevel] = useState(45);
   const [odometer, setOdometer] = useState('');
   const [initialFuel, setInitialFuel] = useState(50);
-  const [initialOdometer] = useState('15000');
+  const [initialOdometer, setInitialOdometer] = useState('15000');
+  const [booking, setBooking] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (data && !error) {
+        setBooking(data);
+        // In a real app, initial values would come from the inspection data saved during pickup
+        setInitialFuel(50);
+        setInitialOdometer('15000');
+      }
+      setIsLoading(false);
+    };
+
+    if (params.id) {
+      fetchBooking();
+    }
+  }, [params.id]);
 
   const imageTypes = [
     { key: 'front', label: 'Front' },
@@ -45,12 +71,37 @@ export default function VehicleReturnPage() {
   const allImagesCaptured = imageTypes.every(type => images[type.key]);
   const fuelDifference = initialFuel - fuelLevel;
 
-  const handleSubmit = () => {
-    setStep('confirmation');
+  const handleSubmit = async () => {
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'valet_enroute_return' })
+      .eq('id', params.id);
+
+    if (!error) {
+      setStep('confirmation');
+    }
   };
 
-  const handleComplete = () => {
-    router.push('/dashboard');
+  const handleComplete = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status: 'completed',
+        ended_at: new Date().toISOString()
+      })
+      .eq('id', params.id);
+
+    if (!error && user) {
+      // Also update partner status back to 'online'
+      await supabase
+        .from('profiles')
+        .update({ status: 'online' })
+        .eq('id', user.id);
+
+      router.push('/dashboard');
+    }
   };
 
   if (step === 'confirmation') {
@@ -177,11 +228,10 @@ export default function VehicleReturnPage() {
                   <button
                     key={area}
                     onClick={() => toggleDamage(area)}
-                    className={`p-3 rounded-xl border-2 transition-colors text-sm ${
-                      damageFound.includes(area)
-                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                    className={`p-3 rounded-xl border-2 transition-colors text-sm ${damageFound.includes(area)
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                      : 'border-gray-300 dark:border-gray-600'
+                      }`}
                   >
                     {area}
                   </button>

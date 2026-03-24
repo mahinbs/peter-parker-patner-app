@@ -1,77 +1,69 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiDollarSign, FiTrendingUp, FiCalendar, FiDownload } from 'react-icons/fi';
 import Card from '../components/Card';
 import MobileContainer from '../components/MobileContainer';
 import Button from '../components/Button';
+import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function EarningsPage() {
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today');
 
-  const earnings = {
-    today: {
-      total: 1250,
-      sessions: 5,
-      average: 250,
-    },
-    week: {
-      total: 8750,
-      sessions: 35,
-      average: 250,
-    },
-    month: {
-      total: 35000,
-      sessions: 140,
-      average: 250,
-    },
-  };
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    sessions: 0,
+    average: 0
+  });
+  const [transactions, setTransactions] = useState<any[]>([]);
 
-  const currentEarnings = earnings[period];
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      if (!user) return;
+      setLoading(true);
 
-  const transactions = [
-    {
-      id: '1',
-      vehicleNumber: 'MH-12-AB-1234',
-      duration: '2 hours',
-      amount: 200,
-      date: '2024-01-15 10:30 AM',
-      status: 'completed',
-    },
-    {
-      id: '2',
-      vehicleNumber: 'MH-12-CD-5678',
-      duration: '4 hours',
-      amount: 400,
-      date: '2024-01-15 11:00 AM',
-      status: 'completed',
-    },
-    {
-      id: '3',
-      vehicleNumber: 'MH-12-EF-9012',
-      duration: '1 hour',
-      amount: 100,
-      date: '2024-01-15 09:15 AM',
-      status: 'completed',
-    },
-    {
-      id: '4',
-      vehicleNumber: 'MH-12-GH-3456',
-      duration: '3 hours',
-      amount: 300,
-      date: '2024-01-15 08:00 AM',
-      status: 'completed',
-    },
-    {
-      id: '5',
-      vehicleNumber: 'MH-12-IJ-7890',
-      duration: '2 hours',
-      amount: 250,
-      date: '2024-01-14 06:30 PM',
-      status: 'completed',
-    },
-  ];
+      let startDate = new Date();
+      if (period === 'today') startDate.setHours(0, 0, 0, 0);
+      else if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+      else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
 
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('partner_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+      } else if (data) {
+        const total = data.reduce((acc, b) => acc + (Number(b.cost) || 0), 0);
+        const sessions = data.length;
+        setStats({
+          total,
+          sessions,
+          average: sessions > 0 ? Math.round(total / sessions) : 0
+        });
+        setTransactions(data.map(b => ({
+          id: b.id,
+          vehicleNumber: b.vehicle_number,
+          duration: b.duration || 'N/A',
+          amount: b.cost,
+          date: new Date(b.created_at).toLocaleString(),
+          status: b.status
+        })));
+      }
+      setLoading(false);
+    };
+
+    fetchEarnings();
+  }, [user, period]);
+
+  const currentEarnings = stats;
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
@@ -91,11 +83,10 @@ export default function EarningsPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`flex-1 px-4 py-2 rounded-xl font-medium transition-colors ${
-                period === p
+              className={`flex-1 px-4 py-2 rounded-xl font-medium transition-colors ${period === p
                   ? 'gradient-primary text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+                }`}
             >
               {p.charAt(0).toUpperCase() + p.slice(1)}
             </button>

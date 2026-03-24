@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiUser, FiPhone, FiMail, FiMapPin, FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
 import Card from '../components/Card';
@@ -9,7 +10,11 @@ import { useAuthStore } from '../store/useAuthStore';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout, fetchProfile } = useAuthStore();
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const kycStatusConfig = {
     pending: {
@@ -154,8 +159,8 @@ export default function ProfilePage() {
             Support & Help
           </Button>
           <Button
-            onClick={() => {
-              logout();
+            onClick={async () => {
+              await logout();
               router.push('/auth/login');
             }}
             variant="danger"

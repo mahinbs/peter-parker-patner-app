@@ -6,6 +6,8 @@ import { FiUpload, FiCamera } from 'react-icons/fi';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function KYCQualificationPage() {
   const router = useRouter();
@@ -23,10 +25,24 @@ export default function KYCQualificationPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
-    router.push('/kyc/status');
-  };
+  const handleSubmit = async () => {
+    const { user } = useAuthStore.getState();
+    if (!user) return;
 
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        experience,
+        kyc_status: 'pending',
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      alert(error.message);
+    } else {
+      router.push('/kyc/status');
+    }
+  };
   return (
     <MobileContainer>
       <div className="p-4 space-y-6">

@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
 
 interface LocationForm {
   name: string;
@@ -33,9 +34,25 @@ export default function NewLocationPage() {
     );
   };
 
-  const onSubmit = (data: LocationForm) => {
-    // Handle form submission
-    router.push('/parking-locations');
+  const onSubmit = async (data: LocationForm) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('parking_locations')
+      .insert({
+        partner_id: user.id,
+        name: data.name,
+        address: data.address,
+        total_slots: data.totalSlots,
+        available_slots: data.totalSlots, // Initially all slots available
+      });
+
+    if (!error) {
+      router.push('/parking-locations');
+    } else {
+      console.error('Error saving location:', error);
+    }
   };
 
   return (
@@ -133,11 +150,10 @@ export default function NewLocationPage() {
                   key={type}
                   type="button"
                   onClick={() => toggleVehicleType(type.toLowerCase())}
-                  className={`p-3 rounded-xl border-2 transition-colors ${
-                    vehicleTypes.includes(type.toLowerCase())
+                  className={`p-3 rounded-xl border-2 transition-colors ${vehicleTypes.includes(type.toLowerCase())
                       ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
                       : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                    }`}
                 >
                   <span className="text-sm font-medium">{type}</span>
                 </button>

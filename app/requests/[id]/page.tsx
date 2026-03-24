@@ -13,12 +13,35 @@ import {
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
 
 export default function RequestDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const [timeLeft, setTimeLeft] = useState(45);
   const [accepted, setAccepted] = useState(false);
+  const [booking, setBooking] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(60); // Added missing timeLeft state
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (data && !error) {
+        setBooking(data);
+      }
+      setIsLoading(false);
+    };
+
+    if (params.id) {
+      fetchBooking();
+    }
+  }, [params.id]);
 
   useEffect(() => {
     if (!accepted && timeLeft > 0) {
@@ -35,13 +58,38 @@ export default function RequestDetailPage() {
     }
   }, [timeLeft, accepted, router]);
 
-  const handleAccept = () => {
-    setAccepted(true);
-    // Navigate to pickup flow
-    setTimeout(() => {
-      router.push('/pickup/123');
-    }, 1000);
+  const handleAccept = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({ partner_id: user.id, status: 'accepted', started_at: new Date().toISOString() })
+      .eq('id', params.id);
+
+    if (!error) {
+      setAccepted(true);
+      setTimeout(() => {
+        router.push(`/pickup/${params.id}`);
+      }, 1000);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <MobileContainer>
+        <div className="p-4 text-center">Loading request details...</div>
+      </MobileContainer>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <MobileContainer>
+        <div className="p-4 text-center text-red-500">Request not found or expired.</div>
+      </MobileContainer>
+    );
+  }
 
   if (accepted) {
     return (
@@ -83,11 +131,11 @@ export default function RequestDetailPage() {
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Vehicle Type</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">Sedan</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{booking.vehicle_type}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Estimated Earnings</p>
-                <p className="text-lg font-bold text-teal-600 dark:text-teal-400">₹200</p>
+                <p className="text-lg font-bold text-teal-600 dark:text-teal-400">₹{booking.cost}</p>
               </div>
             </div>
 
@@ -99,7 +147,7 @@ export default function RequestDetailPage() {
                     Pickup Location
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    123 Main Street, City Center
+                    {booking.pickup_location}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">1.2 km away</p>
                 </div>

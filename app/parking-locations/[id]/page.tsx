@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { supabase } from '../../lib/supabase';
 
 interface LocationForm {
   name: string;
@@ -25,27 +26,38 @@ export default function EditLocationPage() {
   const router = useRouter();
   const params = useParams();
   const locationId = params.id as string;
-  
+
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<LocationForm>();
   const [vehicleTypes, setVehicleTypes] = useState<string[]>(['car']);
   const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading location data
+  // Load location data from Supabase
   useEffect(() => {
-    // In a real app, fetch location data by ID
-    setTimeout(() => {
-      setValue('name', 'Downtown Parking');
-      setValue('address', '123 Main St, City Center');
-      setValue('landmark', 'Near City Mall');
-      setValue('totalSlots', 20);
-      setValue('basePrice', 50);
-      setValue('minDuration', 1);
-      setValue('extensionPrice', 50);
-      setVehicleTypes(['car', 'suv']);
-      setIsActive(true);
+    const fetchLocation = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('parking_locations')
+        .select('*')
+        .eq('id', locationId)
+        .single();
+
+      if (data && !error) {
+        setValue('name', data.name);
+        setValue('address', data.address);
+        setValue('totalSlots', data.total_slots);
+        // Map other fields if they were in the DB, for now defaults
+        setValue('basePrice', 50);
+        setValue('minDuration', 1);
+        setValue('extensionPrice', 50);
+        setIsActive(true);
+      }
       setIsLoading(false);
-    }, 500);
+    };
+
+    if (locationId) {
+      fetchLocation();
+    }
   }, [locationId, setValue]);
 
   const toggleVehicleType = (type: string) => {
@@ -56,16 +68,35 @@ export default function EditLocationPage() {
     );
   };
 
-  const onSubmit = (data: LocationForm) => {
-    // Handle form submission
-    console.log('Updating location:', { ...data, vehicleTypes, isActive });
-    router.push('/parking-locations');
+  const onSubmit = async (data: LocationForm) => {
+    const { error } = await supabase
+      .from('parking_locations')
+      .update({
+        name: data.name,
+        address: data.address,
+        total_slots: data.totalSlots,
+        // Update available_slots logic can be more complex, for now keep simple
+        available_slots: data.totalSlots,
+      })
+      .eq('id', locationId);
+
+    if (!error) {
+      router.push('/parking-locations');
+    } else {
+      console.error('Error updating location:', error);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this location? This action cannot be undone.')) {
-      // Handle deletion
-      router.push('/parking-locations');
+      const { error } = await supabase
+        .from('parking_locations')
+        .delete()
+        .eq('id', locationId);
+
+      if (!error) {
+        router.push('/parking-locations');
+      }
     }
   };
 
@@ -184,11 +215,10 @@ export default function EditLocationPage() {
                   key={type}
                   type="button"
                   onClick={() => toggleVehicleType(type.toLowerCase())}
-                  className={`p-3 rounded-xl border-2 transition-colors ${
-                    vehicleTypes.includes(type.toLowerCase())
+                  className={`p-3 rounded-xl border-2 transition-colors ${vehicleTypes.includes(type.toLowerCase())
                       ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
                       : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                    }`}
                 >
                   <span className="text-sm font-medium">{type}</span>
                 </button>
@@ -209,16 +239,14 @@ export default function EditLocationPage() {
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`relative w-14 h-7 rounded-full transition-colors ${
-                  isActive 
-                    ? 'bg-teal-500' 
+                className={`relative w-14 h-7 rounded-full transition-colors ${isActive
+                    ? 'bg-teal-500'
                     : 'bg-gray-300'
-                }`}
+                  }`}
               >
                 <span
-                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                    isActive ? 'translate-x-7' : 'translate-x-0'
-                  }`}
+                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${isActive ? 'translate-x-7' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>

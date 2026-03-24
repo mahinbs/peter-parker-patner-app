@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
 
 export type PartnerStatus = 'online' | 'ontrip' | 'offline';
 
@@ -21,7 +22,8 @@ interface AuthState {
   logout: () => void;
   updateKYCStatus: (status: 'pending' | 'approved' | 'rejected') => void;
   setStatus: (status: PartnerStatus) => void;
-  toggleOnline: () => void; // Keep for backward compatibility
+  toggleOnline: () => void;
+  fetchProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -33,56 +35,70 @@ export const useAuthStore = create<AuthState>((set) => ({
     set((state) => ({
       user: state.user ? { ...state.user, kycStatus: status } : null,
     })),
-  setStatus: (status) =>
-    set((state) => {
-      if (!state.user) {
-        // Initialize user if not present
-        const newUser: User = {
-          id: '1',
-          name: 'John Doe',
-          phone: '+1234567890',
-          email: 'john@example.com',
-          city: 'Mumbai',
-          zone: 'Zone A',
-          kycStatus: 'approved',
-          status: 'offline',
-          isOnline: false,
-        };
-        return { user: newUser, isAuthenticated: true };
-      }
-      return {
-        user: { 
-          ...state.user, 
+  setStatus: async (status) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ status, is_online: status === 'online' || status === 'ontrip' })
+        .eq('id', user.id);
+
+      set((state) => ({
+        user: state.user ? {
+          ...state.user,
           status,
-          isOnline: status === 'online' || status === 'ontrip', // Update isOnline based on status
-        },
-      };
-    }),
-  toggleOnline: () =>
-    set((state) => {
-      if (!state.user) {
-        // Initialize user if not present
-        const newUser: User = {
-          id: '1',
-          name: 'John Doe',
-          phone: '+1234567890',
-          email: 'john@example.com',
-          city: 'Mumbai',
-          zone: 'Zone A',
-          kycStatus: 'approved',
-          status: 'offline',
-          isOnline: false,
-        };
-        return { user: newUser, isAuthenticated: true };
-      }
-      const newStatus = state.user.isOnline ? 'offline' : 'online';
-      return {
-        user: { 
-          ...state.user, 
-          isOnline: !state.user.isOnline,
+          isOnline: status === 'online' || status === 'ontrip'
+        } : null,
+      }));
+    }
+  },
+  toggleOnline: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const state = useAuthStore.getState();
+    if (user && state.user) {
+      const newIsOnline = !state.user.isOnline;
+      const newStatus: PartnerStatus = newIsOnline ? 'online' : 'offline';
+
+      await supabase
+        .from('profiles')
+        .update({ is_online: newIsOnline, status: newStatus })
+        .eq('id', user.id);
+
+      set((state) => ({
+        user: state.user ? {
+          ...state.user,
+          isOnline: newIsOnline,
           status: newStatus,
-        },
-      };
-    }),
+        } : null,
+      }));
+    }
+  },
+  fetchProfile: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        set({
+          user: {
+            id: profile.id,
+            name: profile.name || profile.full_name,
+            phone: profile.phone,
+            email: profile.email,
+            city: profile.city,
+            zone: profile.zone,
+            kycStatus: profile.kyc_status,
+            status: profile.status,
+            isOnline: profile.is_online,
+          },
+          isAuthenticated: true,
+        });
+      }
+    }
+  },
 }));
 

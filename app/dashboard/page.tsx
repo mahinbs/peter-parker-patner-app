@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiPower, 
-  FiDollarSign, 
-  FiMapPin, 
-  FiClock, 
+import {
+  FiPower,
+  FiDollarSign,
+  FiMapPin,
+  FiClock,
   FiAlertCircle,
   FiCheckCircle,
   FiNavigation,
@@ -17,6 +17,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import MobileContainer from '../components/MobileContainer';
 import { useAuthStore, PartnerStatus } from '../store/useAuthStore';
+import { supabase } from '../lib/supabase';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -25,49 +26,121 @@ export default function DashboardPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [stats, setStats] = useState({
-    earningsToday: 1250,
-    activeSessions: 3,
-    availableSlots: 12,
-    pendingRequests: 2,
+    earningsToday: 0,
+    activeSessions: 0,
+    availableSlots: 0,
+    pendingRequests: 0,
   });
 
-  const [activeRequests, setActiveRequests] = useState([
-    {
-      id: '1',
-      userLocation: '123 Main St',
-      vehicleType: 'Sedan',
-      duration: '2 hours',
-      estimatedEarnings: 200,
-      distance: '1.2 km',
-      timeLeft: 45,
-    },
-    {
-      id: '2',
-      userLocation: '456 Park Ave',
-      vehicleType: 'SUV',
-      duration: '4 hours',
-      estimatedEarnings: 400,
-      distance: '2.5 km',
-      timeLeft: 30,
-    },
-  ]);
+  const [activeRequests, setActiveRequests] = useState<any[]>([]);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
 
-  const [activeSessions, setActiveSessions] = useState([
-    {
-      id: '1',
-      vehicleNumber: 'MH-12-AB-1234',
-      startTime: '10:30 AM',
-      remainingTime: '1h 30m',
-      slotNumber: 'A-12',
-    },
-    {
-      id: '2',
-      vehicleNumber: 'MH-12-CD-5678',
-      startTime: '11:00 AM',
-      remainingTime: '2h 00m',
-      slotNumber: 'B-05',
-    },
-  ]);
+  const fetchStats = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch Earnings Today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { data: earnings } = await supabase
+      .from('bookings')
+      .select('cost')
+      .eq('partner_id', user.id)
+      .eq('status', 'completed')
+      .gte('ended_at', today.toISOString());
+
+    const totalEarnings = earnings?.reduce((acc, curr) => acc + (Number(curr.cost) || 0), 0) || 0;
+
+    // Fetch Active Sessions
+    const { count: sessionsCount } = await supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .eq('partner_id', user.id)
+      .in('status', ['accepted', 'valet_enroute_pickup', 'valet_arrived_pickup', 'valet_enroute_drop', 'parked', 'valet_enroute_return']);
+
+    // Fetch Available Slots (from first managed location for simplicity)
+    const { data: location } = await supabase
+      .from('parking_locations')
+      .select('available_slots')
+      .eq('partner_id', user.id)
+      .limit(1)
+      .single();
+
+    // Fetch Pending Requests
+    const { count: requestsCount } = await supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'searching');
+
+    setStats({
+      earningsToday: totalEarnings,
+      activeSessions: sessionsCount || 0,
+      availableSlots: location?.available_slots || 0,
+      pendingRequests: requestsCount || 0,
+    });
+  };
+
+  const fetchActiveRequests = async () => {
+    const { data: requests } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('status', 'searching')
+      .order('created_at', { ascending: false });
+
+    if (requests) {
+      setActiveRequests(requests.map(r => ({
+        id: r.id,
+        vehicleType: r.vehicle_type || 'Unknown Vehicle',
+        userLocation: r.pickup_location || 'Unknown Location',
+        estimatedEarnings: r.cost || 0,
+        distance: r.distance || '0 km',
+        duration: r.duration || 'N/A',
+        timeLeft: 60, // Mock timer for now
+      })));
+    }
+  };
+
+  const fetchActiveSessions = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: sessions } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('partner_id', user.id)
+      .in('status', ['accepted', 'valet_enroute_pickup', 'valet_arrived_pickup', 'valet_enroute_drop', 'parked', 'valet_enroute_return'])
+      .order('created_at', { ascending: false });
+
+    if (sessions) {
+      setActiveSessions(sessions.map(s => ({
+        id: s.id,
+        vehicleNumber: s.vehicle_number || 'N/A',
+        slotNumber: s.parking_location || 'TBD',
+        startTime: s.started_at ? new Date(s.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+        remainingTime: 'Calculating...', // Logic for remaining time can be added
+      })));
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    fetchActiveRequests();
+    fetchActiveSessions();
+
+    // Real-time subscriptions
+    const bookingSubscription = supabase
+      .channel('bookings-changes')
+      .on('postgres_changes' as any, { event: '*', table: 'bookings' }, () => {
+        fetchStats();
+        fetchActiveRequests();
+        fetchActiveSessions();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingSubscription);
+    };
+  }, []);
 
   const currentStatus: PartnerStatus = user?.status ?? 'offline';
   const city = user?.city ?? 'Not Set';
@@ -117,7 +190,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-[var(--text-secondary)] mb-1">Status</p>
-                  <motion.p 
+                  <motion.p
                     key={currentStatus}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -130,36 +203,34 @@ export default function DashboardPage() {
                   <motion.button
                     onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${
-                      currentStatus === 'online'
-                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                        : currentStatus === 'ontrip'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${currentStatus === 'online'
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      : currentStatus === 'ontrip'
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                         : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
-                    }`}
+                      }`}
                   >
                     <motion.div
-                      animate={{ 
-                        scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1 
+                      animate={{
+                        scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1
                       }}
                       transition={{ duration: 2, repeat: currentStatus === 'online' || currentStatus === 'ontrip' ? Infinity : 0 }}
-                      className={`h-2 w-2 rounded-full ${
-                        currentStatus === 'online'
-                          ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
-                          : currentStatus === 'ontrip'
+                      className={`h-2 w-2 rounded-full ${currentStatus === 'online'
+                        ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+                        : currentStatus === 'ontrip'
                           ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
                           : 'bg-gray-400'
-                      }`}
+                        }`}
                     />
                     <span className={`text-sm font-semibold ${currentStatusConfig.color}`}>
                       {currentStatusConfig.label}
                     </span>
-                    <FiChevronDown 
+                    <FiChevronDown
                       className={`transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''} ${currentStatusConfig.color}`}
                       size={16}
                     />
                   </motion.button>
-                  
+
                   <AnimatePresence>
                     {isStatusDropdownOpen && (
                       <motion.div
@@ -173,20 +244,18 @@ export default function DashboardPage() {
                           <button
                             key={option.value}
                             onClick={() => handleStatusChange(option.value)}
-                            className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                              currentStatus === option.value
-                                ? `${option.bgColor} ${option.color} font-semibold`
-                                : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                            }`}
+                            className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${currentStatus === option.value
+                              ? `${option.bgColor} ${option.color} font-semibold`
+                              : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                              }`}
                           >
                             <div
-                              className={`h-2 w-2 rounded-full ${
-                                option.value === 'online'
-                                  ? 'bg-green-500'
-                                  : option.value === 'ontrip'
+                              className={`h-2 w-2 rounded-full ${option.value === 'online'
+                                ? 'bg-green-500'
+                                : option.value === 'ontrip'
                                   ? 'bg-blue-500'
                                   : 'bg-gray-400'
-                              }`}
+                                }`}
                             />
                             <span>{option.label}</span>
                             {currentStatus === option.value && (
@@ -241,7 +310,7 @@ export default function DashboardPage() {
               >
                 <Card className="hover-lift">
                   <div className="flex items-center gap-3">
-                    <motion.div 
+                    <motion.div
                       className={`p-3 rounded-xl ${stat.color}`}
                       whileHover={{ rotate: [0, -10, 10, -10, 0] }}
                       transition={{ duration: 0.5 }}
@@ -250,7 +319,7 @@ export default function DashboardPage() {
                     </motion.div>
                     <div>
                       <p className="text-xs text-[var(--text-secondary)]">{stat.label}</p>
-                      <motion.p 
+                      <motion.p
                         className="text-lg font-bold text-[var(--text-primary)]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -306,7 +375,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                         <FiClock size={14} />
                         <span>{request.duration}</span>
-                        <motion.span 
+                        <motion.span
                           className="text-orange-500 ml-auto font-semibold"
                           animate={{ opacity: [1, 0.5, 1] }}
                           transition={{ duration: 1, repeat: Infinity }}
@@ -316,7 +385,23 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => router.push(`/requests/${request.id}`)}
+                          onClick={async () => {
+                            const { data: { user } } = await supabase.auth.getUser();
+                            if (user) {
+                              await supabase
+                                .from('bookings')
+                                .update({ partner_id: user.id, status: 'accepted', started_at: new Date().toISOString() })
+                                .eq('id', request.id);
+                              
+                              // Also update partner status to 'ontrip'
+                              await supabase
+                                .from('profiles')
+                                .update({ status: 'ontrip' })
+                                .eq('id', user.id);
+
+                              router.push(`/requests/${request.id}`);
+                            }
+                          }}
                           variant="primary"
                           className="flex-1"
                         >

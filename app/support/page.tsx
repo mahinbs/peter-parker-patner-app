@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiHelpCircle, FiMessageCircle, FiFileText, FiAlertCircle } from 'react-icons/fi';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import MobileContainer from '../components/MobileContainer';
+import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function SupportPage() {
   const [activeTab, setActiveTab] = useState<'help' | 'ticket' | 'disputes'>('help');
@@ -14,6 +16,11 @@ export default function SupportPage() {
     category: '',
     description: '',
   });
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthStore();
 
   const faqs = [
     {
@@ -34,22 +41,83 @@ export default function SupportPage() {
     },
   ];
 
-  const disputes = [
-    {
-      id: '1',
-      type: 'Damage Claim',
-      vehicleNumber: 'MH-12-AB-1234',
-      status: 'open',
-      date: '2024-01-15',
-    },
-    {
-      id: '2',
-      type: 'Payment Dispute',
-      vehicleNumber: 'MH-12-CD-5678',
-      status: 'resolved',
-      date: '2024-01-10',
-    },
-  ];
+  useEffect(() => {
+    const fetchSupportData = async () => {
+      if (!user?.id) return;
+
+      setLoading(true);
+      setError(null);
+
+      if (activeTab === 'ticket') {
+        // Fetch user's tickets
+        const { data, error } = await supabase
+          .from('support_tickets')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching tickets:', error);
+          setError('Failed to load tickets.');
+        } else {
+          setTickets(data);
+        }
+      } else if (activeTab === 'disputes') {
+        // Fetch user's disputes (using support_tickets table with category filter)
+        const { data, error } = await supabase
+          .from('support_tickets')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('category', 'payment')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching disputes:', error);
+          setError('Failed to load disputes.');
+        } else {
+          setDisputes(data);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchSupportData();
+  }, [activeTab, user]);
+
+  const handleTicketSubmit = async () => {
+    if (!user?.id) {
+      setError('You must be logged in to submit a ticket.');
+      return;
+    }
+    if (!ticketForm.subject || !ticketForm.category || !ticketForm.description) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .insert({
+        user_id: user.id,
+        subject: ticketForm.subject,
+        category: ticketForm.category,
+        description: ticketForm.description,
+        status: 'open',
+      });
+
+    if (error) {
+      console.error('Error submitting ticket:', error);
+      setError('Failed to submit ticket. Please try again.');
+    } else {
+      alert('Ticket submitted successfully!');
+      setTicketForm({ subject: '', category: '', description: '' });
+      // Optionally refetch tickets or update state
+      setActiveTab('ticket'); // To refresh the list if on ticket tab
+    }
+    setLoading(false);
+  };
 
   return (
     <MobileContainer>
@@ -64,11 +132,10 @@ export default function SupportPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-4 py-2 rounded-xl font-medium transition-colors ${
-                activeTab === tab
-                  ? 'gradient-primary text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+              className={`flex-1 px-4 py-2 rounded-xl font-medium transition-colors ${activeTab === tab
+                ? 'gradient-primary text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
@@ -118,6 +185,7 @@ export default function SupportPage() {
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">
                 Raise Support Ticket
               </h2>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               <Input
                 label="Subject"
                 placeholder="Brief description of your issue"
@@ -152,7 +220,7 @@ export default function SupportPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
                 />
               </div>
-              <Button fullWidth>
+              <Button onClick={handleTicketSubmit} fullWidth loading={loading}>
                 Submit Ticket
               </Button>
             </div>
@@ -178,20 +246,19 @@ export default function SupportPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          {dispute.type}
+                          {dispute.subject}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {dispute.vehicleNumber}
+                          {dispute.category}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {dispute.date}
+                          {new Date(dispute.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        dispute.status === 'open'
-                          ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
-                          : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${dispute.status === 'open'
+                        ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
+                        : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        }`}>
                         {dispute.status}
                       </span>
                     </div>

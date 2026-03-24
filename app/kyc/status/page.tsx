@@ -6,21 +6,33 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
 import { useAuthStore } from '../../store/useAuthStore';
+import { supabase } from '../../lib/supabase';
 import { useEffect, useState } from 'react';
 
 export default function KYCStatusPage() {
   const router = useRouter();
-  const { updateKYCStatus } = useAuthStore();
+  const { user, updateKYCStatus, fetchProfile } = useAuthStore();
   const [status, setStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
   useEffect(() => {
-    // Simulate checking status
-    const timer = setTimeout(() => {
-      // For demo, you can change this to 'approved' or 'rejected'
-      setStatus('pending');
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    const checkStatus = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('kyc_status')
+          .eq('id', user.id)
+          .single();
+
+        if (data?.kyc_status) {
+          setStatus(data.kyc_status as any);
+        }
+      }
+    };
+
+    checkStatus();
+    // Refresh profile state in store as well
+    fetchProfile();
+  }, [user, fetchProfile]);
 
   const handleContinue = () => {
     if (status === 'approved') {
