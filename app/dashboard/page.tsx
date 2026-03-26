@@ -123,6 +123,12 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    // KYC Check
+    if (user && user.kycStatus !== 'approved') {
+      router.push('/kyc/status');
+      return;
+    }
+
     fetchStats();
     fetchActiveRequests();
     fetchActiveSessions();
@@ -140,7 +146,7 @@ export default function DashboardPage() {
     return () => {
       supabase.removeChannel(bookingSubscription);
     };
-  }, []);
+  }, [user, router]);
 
   const currentStatus: PartnerStatus = user?.status ?? 'offline';
   const city = user?.city ?? 'Not Set';

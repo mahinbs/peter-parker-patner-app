@@ -22,18 +22,18 @@ interface RegisterForm {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'details' | 'otp'>('details');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [step, setStep] = useState<'details' | 'otp' | 'password'>('details');
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']); // 8 digits
   const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const password = watch('password');
 
   const handleDetailsSubmit = async (data: RegisterForm) => {
     setLoading(true);
     setError(null);
+    // Use Email OTP like the user app
     const { error } = await supabase.auth.signInWithOtp({
-      phone: `+91${data.phone}`,
+      email: data.email,
     });
     setLoading(false);
     if (error) {
@@ -47,42 +47,75 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
     const otpString = otp.join('');
-    const { phone } = watch();
-    const { error, data } = await supabase.auth.verifyOtp({
-      phone: `+91${phone}`,
+    const { email } = watch();
+    
+    const { error } = await supabase.auth.verifyOtp({
+      email: email,
       token: otpString,
-      type: 'sms'
+      type: 'email'
     });
+    
     setLoading(false);
-
     if (error) {
       setError(error.message);
     } else {
-      // After verification, we could set a password if needed, but for now let's create a profile
-      const { name, email, city, operatingArea } = watch();
-      if (data.user) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          name,
-          email,
-          city,
-          zone: operatingArea,
+      // After verification, move to password step
+      setStep('password');
+    }
+  };
+
+  const handlePasswordSubmit = async (data: RegisterForm) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // 1. Set Password
+      const { error: authError } = await supabase.auth.updateUser({
+        password: data.password
+      });
+      if (authError) throw authError;
+
+      // 2. Create/Update Profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: user.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          city: data.city,
+          zone: data.operatingArea,
           role: 'partner',
         });
+        if (profileError) throw profileError;
       }
+
       router.push('/kyc/identity');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleOTPChange = (index: number, value: string) => {
     if (value.length > 1) return;
+    if (value && !/^\d*$/.test(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    if (value && index < 5) {
+    if (value && index < 7) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      prevInput?.focus();
     }
   };
 
@@ -115,20 +148,6 @@ export default function RegisterPage() {
                 error={errors.name?.message}
               />
               <Input
-                label="Phone Number"
-                type="tel"
-                icon={<FiPhone />}
-                placeholder="Enter your phone number"
-                {...register('phone', {
-                  required: 'Phone number is required',
-                  pattern: {
-                    value: /^[0-9]{10}$/,
-                    message: 'Please enter a valid 10-digit phone number',
-                  },
-                })}
-                error={errors.phone?.message}
-              />
-              <Input
                 label="Email"
                 type="email"
                 icon={<FiMail />}
@@ -141,6 +160,20 @@ export default function RegisterPage() {
                   },
                 })}
                 error={errors.email?.message}
+              />
+              <Input
+                label="Phone Number"
+                type="tel"
+                icon={<FiPhone />}
+                placeholder="Enter your phone number"
+                {...register('phone', {
+                  required: 'Phone number is required',
+                  pattern: {
+                    value: /^[0-9]{10}$/,
+                    message: 'Please enter a valid 10-digit phone number',
+                  },
+                })}
+                error={errors.phone?.message}
               />
               <Input
                 label="City"
@@ -183,13 +216,13 @@ export default function RegisterPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  Verify Phone Number
+                  Verify Email
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  We've sent a 6-digit code to your phone
+                  We've sent an 8-digit code to {watch('email')}
                 </p>
               </div>
-              <div className="flex gap-2 justify-center">
+              <div className="flex gap-1 justify-center overflow-x-auto py-2 no-scrollbar">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -199,7 +232,8 @@ export default function RegisterPage() {
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleOTPChange(index, e.target.value)}
-                    className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 bg-white dark:bg-gray-800"
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className="w-9 h-12 text-center text-lg font-bold border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 bg-white dark:bg-gray-800 flex-shrink-0"
                   />
                 ))}
               </div>
@@ -215,6 +249,59 @@ export default function RegisterPage() {
                 Back
               </button>
             </div>
+          )}
+
+          {step === 'password' && (
+            <form onSubmit={handleSubmit(handlePasswordSubmit)} className="space-y-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  Set Password
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Create a password for your account
+                </p>
+              </div>
+              <Input
+                label="Password"
+                type="password"
+                icon={<FiLock />}
+                placeholder="Enter password"
+                {...register('password', {
+                  required: 'Password is required',
+                  minLength: {
+                    value: 6,
+                    message: 'Password must be at least 6 characters',
+                  },
+                })}
+                error={errors.password?.message}
+              />
+              <Input
+                label="Confirm Password"
+                type="password"
+                icon={<FiLock />}
+                placeholder="Confirm password"
+                {...register('confirmPassword', {
+                  required: 'Please confirm your password',
+                  validate: (val: string) => {
+                    if (watch('password') != val) {
+                      return "Your passwords do not match";
+                    }
+                  },
+                })}
+                error={errors.confirmPassword?.message}
+              />
+              <Button type="submit" fullWidth loading={loading}>
+                Complete Signup
+              </Button>
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              <button
+                type="button"
+                onClick={() => setStep('otp')}
+                className="w-full text-center text-sm text-teal-600 dark:text-teal-400"
+              >
+                Back
+              </button>
+            </form>
           )}
 
         </Card>

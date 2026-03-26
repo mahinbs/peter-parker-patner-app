@@ -13,18 +13,22 @@ export default function KYCStatusPage() {
   const router = useRouter();
   const { user, updateKYCStatus, fetchProfile } = useAuthStore();
   const [status, setStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
 
   useEffect(() => {
     const checkStatus = async () => {
       if (user) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('kyc_status')
+          .select('kyc_status, kyc_rejection_reason')
           .eq('id', user.id)
           .single();
 
         if (data?.kyc_status) {
           setStatus(data.kyc_status as any);
+        }
+        if (data?.kyc_rejection_reason) {
+          setRejectionReason(data.kyc_rejection_reason);
         }
       }
     };
@@ -93,7 +97,7 @@ export default function KYCStatusPage() {
                       Reason for Rejection:
                     </p>
                     <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                      Image quality is unclear. Please upload clear, high-resolution images of your documents.
+                      {rejectionReason || 'Please check your documents and resubmit.'}
                     </p>
                   </div>
                 </div>
