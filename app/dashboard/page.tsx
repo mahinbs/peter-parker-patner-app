@@ -391,23 +391,40 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex gap-2">
                         <Button
-                          onClick={async () => {
+                        onClick={async () => {
+                          try {
                             const { data: { user } } = await supabase.auth.getUser();
-                            if (user) {
-                              await supabase
-                                .from('bookings')
-                                .update({ partner_id: user.id, status: 'accepted', started_at: new Date().toISOString() })
-                                .eq('id', request.id);
-                              
-                              // Also update partner status to 'ontrip'
-                              await supabase
-                                .from('profiles')
-                                .update({ status: 'ontrip' })
-                                .eq('id', user.id);
-
-                              router.push(`/requests/${request.id}`);
+                            if (!user) {
+                              alert('You must be logged in to accept requests');
+                              return;
                             }
-                          }}
+
+                            const { error } = await supabase
+                              .from('bookings')
+                              .update({ 
+                                partner_id: user.id, 
+                                status: 'accepted', 
+                                started_at: new Date().toISOString() 
+                              })
+                              .eq('id', request.id)
+                              .eq('status', 'searching');
+
+                            if (error) {
+                              alert('Failed to accept request: ' + error.message);
+                              return;
+                            }
+                            
+                            // Also update partner status to 'ontrip'
+                            await supabase
+                              .from('profiles')
+                              .update({ status: 'ontrip' })
+                              .eq('id', user.id);
+
+                            router.push(`/requests/${request.id}`);
+                          } catch (err: any) {
+                            alert('An unexpected error occurred: ' + err.message);
+                          }
+                        }}
                           variant="primary"
                           className="flex-1"
                         >

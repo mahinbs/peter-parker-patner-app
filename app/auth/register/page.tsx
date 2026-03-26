@@ -31,9 +31,12 @@ export default function RegisterPage() {
   const handleDetailsSubmit = async (data: RegisterForm) => {
     setLoading(true);
     setError(null);
-    // Use Email OTP like the user app
+    // Use Email OTP — shouldCreateUser:true forces Supabase to send a 6-digit code
     const { error } = await supabase.auth.signInWithOtp({
       email: data.email,
+      options: {
+        shouldCreateUser: true,
+      },
     });
     setLoading(false);
     if (error) {
@@ -81,6 +84,7 @@ export default function RegisterPage() {
         const { error: profileError } = await supabase.from('profiles').upsert({
           id: user.id,
           name: data.name,
+          full_name: data.name,
           email: data.email,
           phone: data.phone,
           city: data.city,

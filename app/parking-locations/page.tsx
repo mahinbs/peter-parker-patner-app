@@ -85,7 +85,7 @@ export default function ParkingLocationsPage() {
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 No parking locations added yet
               </p>
-              <Button onClick={() => router.push('/parking-locations/new')}>
+              <Button onClick={() => router.push('/parking-locations/new')} className="mx-auto">
                 Add Your First Location
               </Button>
             </div>

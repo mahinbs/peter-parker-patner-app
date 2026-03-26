@@ -59,19 +59,40 @@ export default function RequestDetailPage() {
   }, [timeLeft, accepted, router]);
 
   const handleAccept = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('You must be logged in to accept requests');
+        return;
+      }
 
-    const { error } = await supabase
-      .from('bookings')
-      .update({ partner_id: user.id, status: 'accepted', started_at: new Date().toISOString() })
-      .eq('id', params.id);
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          partner_id: user.id, 
+          status: 'accepted', 
+          started_at: new Date().toISOString() 
+        })
+        .eq('id', params.id)
+        .eq('status', 'searching'); // Ensure it hasn't been claimed yet
 
-    if (!error) {
-      setAccepted(true);
-      setTimeout(() => {
-        router.push(`/pickup/${params.id}`);
-      }, 1000);
+      if (error) {
+        alert('Failed to accept request: ' + error.message);
+      } else {
+        setAccepted(true);
+        // Refresh local booking data
+        const { data: updated } = await supabase.from('bookings').select('*').eq('id', params.id).single();
+        if (updated) setBooking(updated);
+        
+        setTimeout(() => {
+          router.push(`/pickup/${params.id}`);
+        }, 1000);
+      }
+    } catch (err: any) {
+      alert('An unexpected error occurred: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

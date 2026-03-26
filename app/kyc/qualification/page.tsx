@@ -7,7 +7,6 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../store/useAuthStore';
 
 export default function KYCQualificationPage() {
   const router = useRouter();
@@ -51,14 +50,11 @@ export default function KYCQualificationPage() {
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
-    const { user, fetchProfile } = useAuthStore.getState();
-    if (!user) {
-      setError('User not found. Please log in again.');
-      setLoading(false);
-      return;
-    }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found. Please log in again.');
+
       let frontUrl = '';
       let backUrl = '';
 
@@ -81,7 +77,6 @@ export default function KYCQualificationPage() {
 
       if (updateError) throw updateError;
 
-      await fetchProfile();
       router.push('/kyc/status');
     } catch (err: any) {
       setError(err.message || 'Failed to submit KYC. Please try again.');
