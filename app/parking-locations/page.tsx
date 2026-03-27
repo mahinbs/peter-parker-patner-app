@@ -33,7 +33,7 @@ export default function ParkingLocationsPage() {
         .eq('partner_id', user.id);
 
       if (data) {
-        setLocations(data.map(l => ({
+        setLocations(data.map((l: any) => ({
           id: l.id,
           name: l.name,
           address: l.address,
@@ -58,7 +58,7 @@ export default function ParkingLocationsPage() {
       .eq('id', id);
 
     if (!error) {
-      setLocations(prev => prev.filter(l => l.id !== id));
+      setLocations(prev => prev.filter((l: any) => l.id !== id));
     }
   };
 

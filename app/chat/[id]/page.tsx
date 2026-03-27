@@ -66,7 +66,7 @@ export default function ChatPage() {
           table: 'messages',
           filter: `booking_id=eq.${params.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           setMessages((prev) => {
             // Avoid duplicate messages if the sender already added it locally
             if (prev.find(m => m.id === payload.new.id)) return prev;

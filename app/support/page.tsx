@@ -240,7 +240,7 @@ export default function SupportPage() {
                 </div>
               </Card>
             ) : (
-              disputes.map((dispute) => (
+              disputes.map((dispute: any) => (
                 <Card key={dispute.id}>
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">

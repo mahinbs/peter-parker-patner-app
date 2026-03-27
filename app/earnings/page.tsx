@@ -62,7 +62,7 @@ export default function EarningsPage() {
         .order('created_at', { ascending: false });
 
       if (bookings) {
-        const total = bookings.reduce((acc, b) => acc + (Number(b.cost) || 0), 0);
+        const total = bookings.reduce((acc: number, b: any) => acc + (Number(b.cost) || 0), 0);
         const sessions = bookings.length;
         setStats({
           total,
@@ -72,7 +72,7 @@ export default function EarningsPage() {
 
         // Combine bookings and wallet transactions for a unified view
         const combined = [
-          ...(bookings.map(b => ({
+          ...(bookings.map((b: any) => ({
             id: b.id,
             type: 'credit',
             title: b.vehicle_number || 'Valet Service',
@@ -81,7 +81,7 @@ export default function EarningsPage() {
             date: new Date(b.created_at),
             status: 'completed'
           }))),
-          ...(walletTx || []).filter(tx => tx.type === 'debit').map(tx => ({
+          ...(walletTx || []).filter((tx: any) => tx.type === 'debit').map((tx: any) => ({
             id: tx.id,
             type: 'debit',
             title: 'Withdrawal',
@@ -262,7 +262,7 @@ export default function EarningsPage() {
           </h2>
           <div className="space-y-2">
             {transactions.length > 0 ? (
-              transactions.map((tx) => (
+              transactions.map((tx: any) => (
                 <Card key={tx.id}>
                   <div className="flex items-center justify-between">
                     <div className="flex-1">

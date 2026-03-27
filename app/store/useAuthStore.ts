@@ -29,9 +29,9 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
-  setUser: (user) => set({ user, isAuthenticated: true }),
+  setUser: (user: User) => set({ user, isAuthenticated: true }),
   logout: () => set({ user: null, isAuthenticated: false }),
-  updateKYCStatus: (status) =>
+  updateKYCStatus: (status: 'pending' | 'approved' | 'rejected') =>
     set((state) => ({
       user: state.user ? { ...state.user, kycStatus: status } : null,
     })),
@@ -137,7 +137,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             table: 'profiles',
             filter: `id=eq.${authUser.id}`,
           },
-          (payload) => {
+          (payload: any) => {
             const updatedProfile = payload.new;
             set((state) => ({
               user: state.user ? {

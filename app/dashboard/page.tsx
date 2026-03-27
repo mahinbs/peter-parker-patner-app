@@ -50,7 +50,7 @@ export default function DashboardPage() {
       .eq('status', 'completed')
       .gte('ended_at', today.toISOString());
 
-    const totalEarnings = earnings?.reduce((acc, curr) => acc + (Number(curr.cost) || 0), 0) || 0;
+    const totalEarnings = earnings?.reduce((acc: number, curr: any) => acc + (Number(curr.cost) || 0), 0) || 0;
 
     // Fetch Active Sessions
     const { count: sessionsCount } = await supabase
@@ -89,7 +89,7 @@ export default function DashboardPage() {
       .order('created_at', { ascending: false });
 
     if (requests) {
-      setActiveRequests(requests.map(r => ({
+      setActiveRequests(requests.map((r: any) => ({
         id: r.id,
         vehicleType: r.vehicle_type || 'Unknown Vehicle',
         userLocation: r.pickup_location || 'Unknown Location',
@@ -113,7 +113,7 @@ export default function DashboardPage() {
       .order('created_at', { ascending: false });
 
     if (sessions) {
-      setActiveSessions(sessions.map(s => {
+      setActiveSessions(sessions.map((s: any) => {
         let remainingTime = 'N/A';
         if (s.status === 'parked' && s.parked_at) {
           const parkedTime = new Date(s.parked_at).getTime();
@@ -390,7 +390,7 @@ export default function DashboardPage() {
               Active Requests
             </h2>
             <div className="space-y-3">
-              {activeRequests.map((request, index) => (
+              {activeRequests.map((request: any, index: number) => (
                 <motion.div
                   key={request.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -494,7 +494,7 @@ export default function DashboardPage() {
               Active Sessions
             </h2>
             <div className="space-y-3">
-              {activeSessions.map((session, index) => (
+              {activeSessions.map((session: any, index: number) => (
                 <motion.div
                   key={session.id}
                   initial={{ opacity: 0, x: -20 }}
