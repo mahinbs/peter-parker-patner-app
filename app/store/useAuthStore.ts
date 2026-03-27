@@ -35,21 +35,45 @@ export const useAuthStore = create<AuthState>((set) => ({
     set((state) => ({
       user: state.user ? { ...state.user, kycStatus: status } : null,
     })),
-  setStatus: async (status) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
+  setStatus: async (status: PartnerStatus) => {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return { error: 'No user found' };
+
+      const { error } = await supabase
         .from('profiles')
-        .update({ status, is_online: status === 'online' || status === 'ontrip' })
-        .eq('id', user.id);
+        .update({ 
+          status, 
+          is_online: status === 'online' || status === 'ontrip' 
+        })
+        .eq('id', authUser.id);
+
+      if (error) throw error;
 
       set((state) => ({
         user: state.user ? {
           ...state.user,
           status,
           isOnline: status === 'online' || status === 'ontrip'
-        } : null,
+        } : {
+          // Fallback if full profile isn't loaded yet
+          id: authUser.id,
+          name: authUser.user_metadata?.full_name || '',
+          phone: authUser.phone || '',
+          email: authUser.email || '',
+          city: '',
+          zone: '',
+          kycStatus: 'pending',
+          status,
+          isOnline: status === 'online' || status === 'ontrip'
+        },
+        isAuthenticated: true,
       }));
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      return { error: error.message };
     }
   },
   toggleOnline: async () => {
@@ -74,12 +98,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   fetchProfile: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      // 1. Initial fetch
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', authUser.id)
         .single();
 
       if (profile) {
@@ -98,6 +125,33 @@ export const useAuthStore = create<AuthState>((set) => ({
           isAuthenticated: true,
         });
       }
+
+      // 2. Real-time subscription for profile changes (status, etc.)
+      supabase
+        .channel(`profile-${authUser.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${authUser.id}`,
+          },
+          (payload) => {
+            const updatedProfile = payload.new;
+            set((state) => ({
+              user: state.user ? {
+                ...state.user,
+                status: updatedProfile.status,
+                isOnline: updatedProfile.is_online,
+                kycStatus: updatedProfile.kyc_status,
+              } : null,
+            }));
+          }
+        )
+        .subscribe();
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
     }
   },
 }));

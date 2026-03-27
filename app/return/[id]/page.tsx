@@ -8,6 +8,7 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import MobileContainer from '../../components/MobileContainer';
 import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function VehicleReturnPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function VehicleReturnPage() {
   const [initialOdometer, setInitialOdometer] = useState('15000');
   const [booking, setBooking] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { setStatus } = useAuthStore();
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -72,9 +74,27 @@ export default function VehicleReturnPage() {
   const fuelDifference = initialFuel - fuelLevel;
 
   const handleSubmit = async () => {
+    // Calculate final cost if there's overtime (e.g. ₹10 per 10 mins after 30 mins)
+    let finalCost = Number(booking?.cost) || 80;
+    if (booking?.parked_at) {
+      const parkedTime = new Date(booking.parked_at).getTime();
+      const now = new Date().getTime();
+      const diffMins = Math.floor((now - parkedTime) / (1000 * 60));
+      
+      const baseMins = 30;
+      if (diffMins > baseMins) {
+        const overtimeMins = diffMins - baseMins;
+        const overtimeCharge = Math.ceil(overtimeMins / 10) * 10;
+        finalCost += overtimeCharge;
+      }
+    }
+
     const { error } = await supabase
       .from('bookings')
-      .update({ status: 'valet_enroute_return' })
+      .update({ 
+        status: 'valet_enroute_return',
+        cost: finalCost
+      })
       .eq('id', params.id);
 
     if (!error) {
@@ -94,11 +114,8 @@ export default function VehicleReturnPage() {
       .eq('id', params.id);
 
     if (!error && user) {
-      // Also update partner status back to 'online'
-      await supabase
-        .from('profiles')
-        .update({ status: 'online' })
-        .eq('id', user.id);
+      // Also update partner status back to 'online' using the store
+      await setStatus('online');
 
       router.push('/dashboard');
     }
@@ -121,9 +138,15 @@ export default function VehicleReturnPage() {
 
               <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Fuel Used</span>
+                  <span className="text-gray-600 dark:text-gray-400">Total Charges</span>
+                  <span className="font-bold text-lg text-teal-600 dark:text-teal-400">
+                    ₹{booking?.cost || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Fuel Difference</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-100">
-                    {fuelDifference}%
+                    {fuelDifference > 0 ? `-${fuelDifference}%` : 'No change'}
                   </span>
                 </div>
                 {damageFound.length > 0 && (
@@ -132,7 +155,7 @@ export default function VehicleReturnPage() {
                       <FiAlertCircle className="text-red-500 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                          Damage Reported
+                          New Damage Reported
                         </p>
                         <p className="text-xs text-red-600 dark:text-red-300 mt-1">
                           {damageFound.join(', ')}

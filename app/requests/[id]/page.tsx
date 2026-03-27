@@ -14,6 +14,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
 import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function RequestDetailPage() {
   const router = useRouter();
@@ -21,14 +22,18 @@ export default function RequestDetailPage() {
   const [accepted, setAccepted] = useState(false);
   const [booking, setBooking] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(60); // Added missing timeLeft state
+  const [timeLeft, setTimeLeft] = useState(60);
+  const { setStatus } = useAuthStore();
 
   useEffect(() => {
     const fetchBooking = async () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('bookings')
-        .select('*')
+        .select(`
+          *,
+          user:profiles!user_id(full_name, phone)
+        `)
         .eq('id', params.id)
         .single();
 
@@ -40,6 +45,23 @@ export default function RequestDetailPage() {
 
     if (params.id) {
       fetchBooking();
+
+      // Subscribe to real-time changes
+      const channel = supabase
+        .channel(`booking-detail-${params.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'bookings', filter: `id=eq.${params.id}` },
+          (payload: any) => {
+            setBooking(payload.new);
+            if (payload.new.status === 'accepted') setAccepted(true);
+          }
+        )
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [params.id]);
 
@@ -81,13 +103,12 @@ export default function RequestDetailPage() {
         alert('Failed to accept request: ' + error.message);
       } else {
         setAccepted(true);
+        // Also update partner status to 'ontrip' using the store
+        await setStatus('ontrip');
+        
         // Refresh local booking data
         const { data: updated } = await supabase.from('bookings').select('*').eq('id', params.id).single();
         if (updated) setBooking(updated);
-        
-        setTimeout(() => {
-          router.push(`/pickup/${params.id}`);
-        }, 1000);
       }
     } catch (err: any) {
       alert('An unexpected error occurred: ' + err.message);
@@ -112,7 +133,7 @@ export default function RequestDetailPage() {
     );
   }
 
-  if (accepted) {
+  if (accepted || booking.status === 'accepted' || booking.status === 'valet_arrived_pickup') {
     return (
       <MobileContainer>
         <div className="p-4 space-y-6">
@@ -122,13 +143,63 @@ export default function RequestDetailPage() {
                 <FiClock className="text-green-600 dark:text-green-400" size={48} />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                Request Accepted!
+                {booking.status === 'valet_arrived_pickup' ? 'You have Arrived!' : 'Request Accepted!'}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Navigate to pickup location
+                {booking.status === 'valet_arrived_pickup' 
+                  ? 'Wait for the user or click "Picked Up" to start inspection' 
+                  : 'Navigate to pickup location'}
               </p>
             </div>
           </Card>
+
+          <Card>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <FiMapPin className="text-[#66BD59]" size={20} />
+                <div className="flex-1">
+                  <p className="text-xs text-neutral-500">Pickup Location</p>
+                  <p className="font-semibold">{booking.pickup_location}</p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(booking.pickup_location)}`)}
+                variant="outline" 
+                fullWidth
+              >
+                <FiNavigation size={18} />
+                Open in Maps
+              </Button>
+            </div>
+          </Card>
+
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+            {booking.status === 'valet_arrived_pickup' ? (
+              <Button 
+                fullWidth 
+                size="lg"
+                onClick={() => router.push(`/pickup/${params.id}`)}
+              >
+                <FiCheckCircle className="mr-2" size={20} />
+                Picked Up (Start Inspection)
+              </Button>
+            ) : (
+              <Button 
+                fullWidth 
+                size="lg"
+                onClick={async () => {
+                  const { error } = await supabase
+                    .from('bookings')
+                    .update({ status: 'valet_arrived_pickup' })
+                    .eq('id', params.id);
+                  if (error) alert('Error: ' + error.message);
+                }}
+              >
+                <FiCheckCircle className="mr-2" size={20} />
+                I have Arrived at Pickup
+              </Button>
+            )}
+          </div>
         </div>
       </MobileContainer>
     );
@@ -178,9 +249,9 @@ export default function RequestDetailPage() {
                 <FiClock className="text-teal-600 dark:text-teal-400 mt-1" size={20} />
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    Parking Duration
+                    Stay Duration
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">2 hours</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">30 mins free + extensions</p>
                 </div>
               </div>
 
@@ -191,10 +262,10 @@ export default function RequestDetailPage() {
                     Pricing Breakdown
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Base: ₹50/hour × 2 hours = ₹100
+                    Base: 30 mins (Complimentary)
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Service Fee: ₹100
+                    Overtime: ₹10 / 10 mins thereafter
                   </p>
                 </div>
               </div>
@@ -211,15 +282,15 @@ export default function RequestDetailPage() {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => window.open('tel:+911234567890')}
+                onClick={() => window.open(`tel:${booking.user?.phone || '+911234567890'}`)}
               >
                 <FiPhone size={18} />
-                Call
+                Call {booking.user?.full_name?.split(' ')[0] || 'User'}
               </Button>
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => router.push('/chat/123')}
+                onClick={() => router.push(`/chat/${params.id}`)}
               >
                 <FiMessageCircle size={18} />
                 Message

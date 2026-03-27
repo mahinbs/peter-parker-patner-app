@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, setStatus } = useAuthStore();
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [stats, setStats] = useState({
@@ -112,13 +113,32 @@ export default function DashboardPage() {
       .order('created_at', { ascending: false });
 
     if (sessions) {
-      setActiveSessions(sessions.map(s => ({
-        id: s.id,
-        vehicleNumber: s.vehicle_number || 'N/A',
-        slotNumber: s.parking_location || 'TBD',
-        startTime: s.started_at ? new Date(s.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
-        remainingTime: 'Calculating...', // Logic for remaining time can be added
-      })));
+      setActiveSessions(sessions.map(s => {
+        let remainingTime = 'N/A';
+        if (s.status === 'parked' && s.parked_at) {
+          const parkedTime = new Date(s.parked_at).getTime();
+          const now = new Date().getTime();
+          const diffInSeconds = Math.floor((now - parkedTime) / 1000);
+          const baseTime = 30 * 60;
+          const remaining = Math.max(0, baseTime - diffInSeconds);
+          const mins = Math.floor(remaining / 60);
+          const secs = remaining % 60;
+          remainingTime = `${mins}:${secs.toString().padStart(2, '0')}`;
+        } else if (s.status.includes('enroute')) {
+          remainingTime = 'Enroute';
+        } else if (s.status === 'accepted') {
+          remainingTime = 'Accepted';
+        }
+
+        return {
+          id: s.id,
+          status: s.status,
+          vehicleNumber: s.vehicle_number || 'N/A',
+          slotNumber: s.parking_location || 'TBD',
+          startTime: s.started_at ? new Date(s.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+          remainingTime,
+        };
+      }));
     }
   };
 
@@ -160,9 +180,22 @@ export default function DashboardPage() {
 
   const currentStatusConfig = statusOptions.find(opt => opt.value === currentStatus) || statusOptions[2];
 
-  const handleStatusChange = (status: PartnerStatus) => {
-    setStatus(status);
+  const handleStatusChange = async (status: PartnerStatus) => {
+    if (status === currentStatus) {
+      setIsStatusDropdownOpen(false);
+      return;
+    }
+
+    setIsStatusUpdating(true);
     setIsStatusDropdownOpen(false);
+
+    const result = await (setStatus as any)(status);
+
+    if (result?.error) {
+      alert('Failed to update status: ' + result.error);
+    }
+    
+    setIsStatusUpdating(false);
   };
 
   // Close dropdown when clicking outside
@@ -208,28 +241,33 @@ export default function DashboardPage() {
                 <div className="relative" ref={dropdownRef}>
                   <motion.button
                     onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                    disabled={isStatusUpdating}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${currentStatus === 'online'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${isStatusUpdating ? 'opacity-50 cursor-not-allowed' : ''} ${currentStatus === 'online'
                       ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                       : currentStatus === 'ontrip'
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                         : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
                       }`}
                   >
-                    <motion.div
-                      animate={{
-                        scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1
-                      }}
-                      transition={{ duration: 2, repeat: currentStatus === 'online' || currentStatus === 'ontrip' ? Infinity : 0 }}
-                      className={`h-2 w-2 rounded-full ${currentStatus === 'online'
-                        ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
-                        : currentStatus === 'ontrip'
-                          ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
-                          : 'bg-gray-400'
-                        }`}
-                    />
+                    {isStatusUpdating ? (
+                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+                    ) : (
+                      <motion.div
+                        animate={{
+                          scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1
+                        }}
+                        transition={{ duration: 2, repeat: currentStatus === 'online' || currentStatus === 'ontrip' ? Infinity : 0 }}
+                        className={`h-2 w-2 rounded-full ${currentStatus === 'online'
+                          ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+                          : currentStatus === 'ontrip'
+                            ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
+                            : 'bg-gray-400'
+                          }`}
+                      />
+                    )}
                     <span className={`text-sm font-semibold ${currentStatusConfig.color}`}>
-                      {currentStatusConfig.label}
+                      {isStatusUpdating ? 'Updating...' : currentStatusConfig.label}
                     </span>
                     <FiChevronDown
                       className={`transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''} ${currentStatusConfig.color}`}
@@ -414,11 +452,8 @@ export default function DashboardPage() {
                               return;
                             }
                             
-                            // Also update partner status to 'ontrip'
-                            await supabase
-                              .from('profiles')
-                              .update({ status: 'ontrip' })
-                              .eq('id', user.id);
+                            // Also update partner status to 'ontrip' using the store
+                            await setStatus('ontrip');
 
                             router.push(`/requests/${request.id}`);
                           } catch (err: any) {
@@ -469,14 +504,27 @@ export default function DashboardPage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Card
-                    onClick={() => router.push(`/sessions/${session.id}`)}
-                    className="hover-lift cursor-pointer"
+                    className={`hover-lift cursor-pointer border-2 transition-all ${
+                      session.status === 'valet_enroute_return' 
+                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/10' 
+                        : 'border-transparent'
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div 
+                      className="flex items-center justify-between"
+                      onClick={() => router.push(`/sessions/${session.id}`)}
+                    >
                       <div>
-                        <p className="font-semibold text-[var(--text-primary)]">
-                          {session.vehicleNumber}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-[var(--text-primary)]">
+                            {session.vehicleNumber}
+                          </p>
+                          {session.status === 'valet_enroute_return' && (
+                            <span className="px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                              RETURN REQUESTED
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-[var(--text-secondary)]">
                           Slot: {session.slotNumber}
                         </p>
@@ -485,12 +533,31 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-[var(--color-primary-accent)]">
-                          {session.remainingTime}
+                        <p className={`text-sm font-semibold ${
+                          session.status === 'valet_enroute_return' ? 'text-orange-600' : 'text-[var(--color-primary-accent)]'
+                        }`}>
+                          {session.status === 'valet_enroute_return' ? 'USER WAITING' : session.remainingTime}
                         </p>
-                        <p className="text-xs text-[var(--text-tertiary)]">remaining</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          {session.status === 'valet_enroute_return' ? 'at pickup point' : 'remaining'}
+                        </p>
                       </div>
                     </div>
+                    {session.status === 'valet_enroute_return' && (
+                      <div className="mt-3 pt-3 border-t border-orange-200 dark:border-orange-800/50">
+                        <Button 
+                          fullWidth 
+                          size="sm"
+                          variant="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/return/${session.id}`);
+                          }}
+                        >
+                          Initiate Return Process
+                        </Button>
+                      </div>
+                    )}
                   </Card>
                 </motion.div>
               ))}

@@ -191,9 +191,15 @@ export default function VehiclePickupPage() {
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Vehicle Inspection
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Vehicle Inspection
+          </h1>
+          <div className="flex flex-col items-end">
+            <span className="text-xs font-black bg-gradient-to-r from-[#34C0CA] to-[#66BD59] bg-clip-text text-transparent italic">PETER PARKER</span>
+            <span className="text-[8px] font-bold tracking-widest text-neutral-500 -mt-1 uppercase">Partner App</span>
+          </div>
+        </div>
 
         <Card>
           <div className="space-y-4">
