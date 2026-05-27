@@ -122,7 +122,7 @@ export default function SupportPage() {
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
           Support & Help
         </h1>
 
@@ -151,7 +151,7 @@ export default function SupportPage() {
                   <div className="flex items-start gap-3">
                     <FiHelpCircle className="text-teal-600 dark:text-teal-400 mt-1" size={20} />
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="font-semibold !text-gray-900 dark:!text-gray-100">
                         {faq.question}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -182,7 +182,7 @@ export default function SupportPage() {
         {activeTab === 'ticket' && (
           <Card>
             <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
                 Raise Support Ticket
               </h2>
               {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -199,7 +199,7 @@ export default function SupportPage() {
                 <select
                   value={ticketForm.category}
                   onChange={(e) => setTicketForm(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 !text-gray-900 dark:!text-gray-100 focus:outline-none focus:border-teal-500"
                 >
                   <option value="">Select category</option>
                   <option value="technical">Technical Issue</option>
@@ -217,7 +217,7 @@ export default function SupportPage() {
                   onChange={(e) => setTicketForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe your issue in detail..."
                   rows={6}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 !text-gray-900 dark:!text-gray-100 focus:outline-none focus:border-teal-500"
                 />
               </div>
               <Button onClick={handleTicketSubmit} fullWidth loading={loading}>
@@ -245,7 +245,7 @@ export default function SupportPage() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 className="font-semibold !text-gray-900 dark:!text-gray-100">
                           {dispute.subject}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">

@@ -59,7 +59,7 @@ export default function RequestDetailPage() {
           }
         )
         .subscribe();
-      
+
       return () => {
         supabase.removeChannel(channel);
       };
@@ -92,10 +92,10 @@ export default function RequestDetailPage() {
 
       const { error } = await supabase
         .from('bookings')
-        .update({ 
-          partner_id: user.id, 
-          status: 'accepted', 
-          started_at: new Date().toISOString() 
+        .update({
+          partner_id: user.id,
+          status: 'accepted',
+          started_at: new Date().toISOString()
         })
         .eq('id', params.id)
         .eq('status', 'searching'); // Ensure it hasn't been claimed yet
@@ -106,7 +106,7 @@ export default function RequestDetailPage() {
         setAccepted(true);
         // Also update partner status to 'ontrip' using the store
         await setStatus('ontrip');
-        
+
         // Refresh local booking data
         const { data: updated } = await supabase.from('bookings').select('*').eq('id', params.id).single();
         if (updated) setBooking(updated);
@@ -143,12 +143,12 @@ export default function RequestDetailPage() {
               <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
                 <FiClock className="text-green-600 dark:text-green-400" size={48} />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
                 {booking.status === 'valet_arrived_pickup' ? 'You have Arrived!' : 'Request Accepted!'}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {booking.status === 'valet_arrived_pickup' 
-                  ? 'Wait for the user or click "Picked Up" to start inspection' 
+                {booking.status === 'valet_arrived_pickup'
+                  ? 'Wait for the user or click "Picked Up" to start inspection'
                   : 'Navigate to pickup location'}
               </p>
             </div>
@@ -163,9 +163,9 @@ export default function RequestDetailPage() {
                   <p className="font-semibold">{booking.pickup_location}</p>
                 </div>
               </div>
-              <Button 
+              <Button
                 onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(booking.pickup_location)}`)}
-                variant="outline" 
+                variant="outline"
                 fullWidth
               >
                 <FiNavigation size={18} />
@@ -176,8 +176,8 @@ export default function RequestDetailPage() {
 
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
             {booking.status === 'valet_arrived_pickup' ? (
-              <Button 
-                fullWidth 
+              <Button
+                fullWidth
                 size="lg"
                 onClick={() => router.push(`/pickup/${params.id}`)}
               >
@@ -185,8 +185,8 @@ export default function RequestDetailPage() {
                 Picked Up (Start Inspection)
               </Button>
             ) : (
-              <Button 
-                fullWidth 
+              <Button
+                fullWidth
                 size="lg"
                 onClick={async () => {
                   const { error } = await supabase
@@ -210,7 +210,7 @@ export default function RequestDetailPage() {
     <MobileContainer>
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
             Parking Request
           </h1>
           <div className="text-right">
@@ -224,7 +224,7 @@ export default function RequestDetailPage() {
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Vehicle Type</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{booking.vehicle_type}</p>
+                <p className="text-lg font-bold !text-gray-900 dark:!text-gray-100">{booking.vehicle_type}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Estimated Earnings</p>
@@ -236,7 +236,7 @@ export default function RequestDetailPage() {
               <div className="flex items-start gap-3">
                 <FiMapPin className="text-teal-600 dark:text-teal-400 mt-1" size={20} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                     Pickup Location
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -249,7 +249,7 @@ export default function RequestDetailPage() {
               <div className="flex items-start gap-3">
                 <FiClock className="text-teal-600 dark:text-teal-400 mt-1" size={20} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                     Stay Duration
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">30 mins free + extensions</p>
@@ -259,7 +259,7 @@ export default function RequestDetailPage() {
               <div className="flex items-start gap-3">
                 <FiDollarSign className="text-teal-600 dark:text-teal-400 mt-1" size={20} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                     Pricing Breakdown
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -276,7 +276,7 @@ export default function RequestDetailPage() {
 
         <Card>
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="font-semibold !text-gray-900 dark:!text-gray-100">
               Contact User
             </h3>
             <div className="flex gap-2">

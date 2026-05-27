@@ -124,7 +124,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Image
@@ -135,7 +135,7 @@ export default function RegisterPage() {
             className="mx-auto mb-4"
           />
           <h1 className="text-3xl font-bold gradient-text mb-2">Join as Partner</h1>
-          <p className="text-gray-600">Create your valet partner account</p>
+          <p className="text-[var(--text-secondary)]">Create your valet partner account</p>
         </div>
 
         <Card>
@@ -203,7 +203,7 @@ export default function RegisterPage() {
                 Continue
               </Button>
               {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-              <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-center text-sm text-[var(--text-surface-secondary)]">
                 Already have an account?{' '}
                 <button
                   type="button"
@@ -219,10 +219,10 @@ export default function RegisterPage() {
           {step === 'otp' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                <h2 className="text-xl font-bold text-[var(--text-surface)] mb-2">
                   Verify Email
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-[var(--text-surface-secondary)]">
                   We've sent an 8-digit code to {watch('email')}
                 </p>
               </div>
@@ -237,7 +237,7 @@ export default function RegisterPage() {
                     value={digit}
                     onChange={(e) => handleOTPChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-9 h-12 text-center text-lg font-bold border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 bg-white dark:bg-gray-800 flex-shrink-0"
+                    className="w-9 h-12 text-center text-lg font-bold border-2 border-[var(--neutral-200)] rounded-lg focus:border-[var(--color-primary-accent)] focus:ring-2 focus:ring-[var(--color-primary-accent)]/20 bg-[var(--color-surface)] text-[var(--text-surface)] flex-shrink-0"
                   />
                 ))}
               </div>
@@ -258,10 +258,10 @@ export default function RegisterPage() {
           {step === 'password' && (
             <form onSubmit={handleSubmit(handlePasswordSubmit)} className="space-y-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                <h2 className="text-xl font-bold text-[var(--text-surface)] mb-2">
                   Set Password
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-[var(--text-surface-secondary)]">
                   Create a password for your account
                 </p>
               </div>

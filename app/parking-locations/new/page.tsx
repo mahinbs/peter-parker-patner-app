@@ -58,13 +58,13 @@ export default function NewLocationPage() {
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
           Add Parking Location
         </h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Card>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
               Location Details
             </h2>
             <div className="space-y-4">
@@ -90,7 +90,7 @@ export default function NewLocationPage() {
           </Card>
 
           <Card>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
               Capacity & Pricing
             </h2>
             <div className="space-y-4">
@@ -141,7 +141,7 @@ export default function NewLocationPage() {
           </Card>
 
           <Card>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
               Vehicle Types Supported
             </h2>
             <div className="grid grid-cols-3 gap-3">
@@ -151,8 +151,8 @@ export default function NewLocationPage() {
                   type="button"
                   onClick={() => toggleVehicleType(type.toLowerCase())}
                   className={`p-3 rounded-xl border-2 transition-colors ${vehicleTypes.includes(type.toLowerCase())
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                      : 'border-gray-300 dark:border-gray-600'
+                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                    : 'border-gray-300 dark:border-gray-600'
                     }`}
                 >
                   <span className="text-sm font-medium">{type}</span>

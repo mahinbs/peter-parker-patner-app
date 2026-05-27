@@ -124,7 +124,7 @@ export default function ActiveSessionPage() {
       <div className="p-4 space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold !text-gray-900">
               Active Parking
             </h1>
             <span className="px-3 py-1 bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -132,7 +132,7 @@ export default function ActiveSessionPage() {
             </span>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Vehicle: <span className="font-bold text-gray-900 dark:text-gray-100">{booking.vehicle_number}</span> ({booking.vehicle_type})
+            Vehicle: <span className="font-bold !text-gray-900">{booking.vehicle_number}</span> ({booking.vehicle_type})
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export default function ActiveSessionPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Current Cost</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">₹{booking.cost || 0}</p>
+                <p className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">₹{booking.cost || 0}</p>
               </div>
             </div>
 
@@ -158,7 +158,7 @@ export default function ActiveSessionPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">Parked Since</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                  <p className="text-sm font-bold !text-gray-900 dark:!text-gray-100">
                     {booking.parked_at ? format(new Date(booking.parked_at), 'h:mm a') : 'Not Parked Yet'}
                   </p>
                 </div>
@@ -170,7 +170,7 @@ export default function ActiveSessionPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-gray-500 uppercase tracking-wider">Parking Location</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                  <p className="text-sm font-bold !text-gray-900 dark:!text-gray-100 leading-tight">
                     {booking.parking_location || 'Awaiting Arrival'}
                   </p>
                 </div>

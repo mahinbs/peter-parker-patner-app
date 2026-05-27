@@ -82,7 +82,7 @@ export default function KYCStatusPage() {
             <div className={`inline-flex p-6 rounded-full ${config.bgColor} mb-4`}>
               <Icon size={64} className={config.color} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
               {config.title}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">

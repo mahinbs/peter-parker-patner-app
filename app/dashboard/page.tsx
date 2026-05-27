@@ -217,7 +217,16 @@ export default function DashboardPage() {
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
+      {/* Background Image with fade to transparent */}
+      <div className="absolute top-0 left-0 w-full h-[45vh] pointer-events-none -z-10">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[var(--color-background)]/80 to-[var(--color-background)]" />
+      </div>
+
+      <div className="p-4 space-y-4 pt-8">
         {/* Status Dropdown */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -228,12 +237,12 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-secondary)] mb-1">Status</p>
+                  <p className="text-sm text-[var(--text-surface-secondary)] mb-1">Status</p>
                   <motion.p
                     key={currentStatus}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className={`text-lg font-bold ${currentStatusConfig.color}`}
+                    className={`text-lg font-bold ${currentStatus === 'online' ? 'text-green-400' : currentStatus === 'ontrip' ? 'text-blue-400' : 'text-gray-400'}`}
                   >
                     {currentStatusConfig.label}
                   </motion.p>
@@ -317,14 +326,14 @@ export default function DashboardPage() {
               <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[var(--text-secondary)] mb-1">Current Location</p>
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    <p className="text-xs text-[var(--text-surface-secondary)] mb-1">Current Location</p>
+                    <p className="text-sm font-semibold text-[var(--text-surface)]">
                       {city}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-[var(--text-secondary)] mb-1">Zone</p>
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    <p className="text-xs text-[var(--text-surface-secondary)] mb-1">Zone</p>
+                    <p className="text-sm font-semibold text-[var(--text-surface)]">
                       {zone}
                     </p>
                   </div>

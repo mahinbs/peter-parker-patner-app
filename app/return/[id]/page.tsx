@@ -80,7 +80,7 @@ export default function VehicleReturnPage() {
       const parkedTime = new Date(booking.parked_at).getTime();
       const now = new Date().getTime();
       const diffMins = Math.floor((now - parkedTime) / (1000 * 60));
-      
+
       const baseMins = 30;
       if (diffMins > baseMins) {
         const overtimeMins = diffMins - baseMins;
@@ -91,7 +91,7 @@ export default function VehicleReturnPage() {
 
     const { error } = await supabase
       .from('bookings')
-      .update({ 
+      .update({
         status: 'valet_enroute_return',
         cost: finalCost
       })
@@ -104,7 +104,7 @@ export default function VehicleReturnPage() {
 
   const handleComplete = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     const { error } = await supabase
       .from('bookings')
       .update({
@@ -131,7 +131,7 @@ export default function VehicleReturnPage() {
                 <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
                   <FiCheck className="text-green-600 dark:text-green-400" size={48} />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
                   Return Inspection Complete
                 </h1>
               </div>
@@ -145,7 +145,7 @@ export default function VehicleReturnPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Fuel Difference</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  <span className="font-semibold !text-gray-900 dark:!text-gray-100">
                     {fuelDifference > 0 ? `-${fuelDifference}%` : 'No change'}
                   </span>
                 </div>
@@ -183,13 +183,13 @@ export default function VehicleReturnPage() {
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold !text-gray-900">
           Vehicle Return Inspection
         </h1>
 
         <Card>
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
               Capture Return Images
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -242,7 +242,7 @@ export default function VehicleReturnPage() {
 
         <Card>
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
               Damage Check
             </h2>
             <div className="grid grid-cols-2 gap-2">
@@ -298,7 +298,7 @@ export default function VehicleReturnPage() {
                   value={odometer}
                   onChange={(e) => setOdometer(e.target.value)}
                   placeholder="Enter current reading"
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 !text-gray-900 dark:!text-gray-100 focus:outline-none focus:border-teal-500"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">

@@ -43,7 +43,7 @@ export default function ProfilePage() {
   return (
     <MobileContainer>
       <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
           Profile
         </h1>
 
@@ -55,7 +55,7 @@ export default function ProfilePage() {
                 {user?.name?.charAt(0).toUpperCase() || 'V'}
               </span>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+            <h2 className="text-xl font-bold !text-gray-900 dark:!text-gray-100 mb-1">
               {user?.name || 'Valet Partner'}
             </h2>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 text-sm">
@@ -67,7 +67,7 @@ export default function ProfilePage() {
 
         {/* Personal Information */}
         <Card>
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <h3 className="font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
             Personal Information
           </h3>
           <div className="space-y-3">
@@ -75,7 +75,7 @@ export default function ProfilePage() {
               <FiUser className="text-gray-400" size={20} />
               <div className="flex-1">
                 <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                   {user?.name || 'Not set'}
                 </p>
               </div>
@@ -84,7 +84,7 @@ export default function ProfilePage() {
               <FiPhone className="text-gray-400" size={20} />
               <div className="flex-1">
                 <p className="text-xs text-gray-500 dark:text-gray-400">Phone Number</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                   {user?.phone || 'Not set'}
                 </p>
               </div>
@@ -93,7 +93,7 @@ export default function ProfilePage() {
               <FiMail className="text-gray-400" size={20} />
               <div className="flex-1">
                 <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                   {user?.email || 'Not set'}
                 </p>
               </div>
@@ -102,7 +102,7 @@ export default function ProfilePage() {
               <FiMapPin className="text-gray-400" size={20} />
               <div className="flex-1">
                 <p className="text-xs text-gray-500 dark:text-gray-400">City & Area</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
                   {user?.city || 'Not set'}
                 </p>
               </div>
@@ -112,14 +112,14 @@ export default function ProfilePage() {
 
         {/* KYC Status */}
         <Card>
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <h3 className="font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
             KYC Status
           </h3>
           <div className={`p-4 rounded-xl ${statusConfig.bgColor}`}>
             <div className="flex items-center gap-3">
               <StatusIcon className={statusConfig.color} size={24} />
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">
+                <p className="font-medium !text-gray-900 dark:!text-gray-100">
                   {statusConfig.text}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">

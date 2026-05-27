@@ -35,7 +35,7 @@ export default function EarningsPage() {
         .select('id, balance')
         .eq('user_id', user.id)
         .single();
-      
+
       if (walletData) {
         setWallet({ id: walletData.id, balance: Number(walletData.balance) });
       }
@@ -138,7 +138,7 @@ export default function EarningsPage() {
       setIsWithdrawModalOpen(false);
       setWithdrawAmount('');
       // Refresh transactions
-      setPeriod(period); 
+      setPeriod(period);
     } catch (err: any) {
       alert('Withdrawal failed: ' + err.message);
     } finally {
@@ -151,13 +151,13 @@ export default function EarningsPage() {
     <MobileContainer>
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
             Earnings
           </h1>
           <div className="flex gap-2">
-            <Button 
+            <Button
               onClick={() => setIsWithdrawModalOpen(true)}
-              variant="primary" 
+              variant="primary"
               size="sm"
               disabled={!wallet || wallet.balance <= 0}
             >
@@ -192,8 +192,8 @@ export default function EarningsPage() {
               key={p}
               onClick={() => setPeriod(p)}
               className={`flex-1 px-4 py-2 rounded-xl font-medium transition-colors ${period === p
-                  ? 'gradient-primary text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                ? 'gradient-primary text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
             >
               {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -210,7 +210,7 @@ export default function EarningsPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Total Earnings</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <p className="text-xl font-bold !text-gray-900 dark:!text-gray-100">
                   ₹{currentEarnings.total.toLocaleString()}
                 </p>
               </div>
@@ -224,7 +224,7 @@ export default function EarningsPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Sessions</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <p className="text-xl font-bold !text-gray-900 dark:!text-gray-100">
                   {currentEarnings.sessions}
                 </p>
               </div>
@@ -236,7 +236,7 @@ export default function EarningsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600 dark:text-gray-400">Average per Session</span>
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              <span className="text-lg font-bold !text-gray-900 dark:!text-gray-100">
                 ₹{currentEarnings.average}
               </span>
             </div>
@@ -247,7 +247,7 @@ export default function EarningsPage() {
               </span>
             </div>
             <div className="flex items-center justify-between pt-2">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">Net Earnings</span>
+              <span className="font-semibold !text-gray-900 dark:!text-gray-100">Net Earnings</span>
               <span className="text-xl font-bold text-teal-600 dark:text-teal-400">
                 ₹{Math.round(currentEarnings.total * 0.9).toLocaleString()}
               </span>
@@ -257,7 +257,7 @@ export default function EarningsPage() {
 
         {/* Transactions */}
         <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
+          <h2 className="text-lg font-bold !text-gray-900 dark:!text-gray-100 mb-3">
             Recent Transactions
           </h2>
           <div className="space-y-2">
@@ -266,7 +266,7 @@ export default function EarningsPage() {
                 <Card key={tx.id}>
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="font-semibold !text-gray-100">
                         {tx.title}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -277,11 +277,10 @@ export default function EarningsPage() {
                       <p className={`text-lg font-bold ${tx.type === 'credit' ? 'text-teal-600' : 'text-red-500'}`}>
                         {tx.type === 'credit' ? '+' : '-'}₹{tx.amount}
                       </p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${
-                        tx.status === 'completed' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${tx.status === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                        }`}>
                         {tx.status}
                       </span>
                     </div>
@@ -315,15 +314,15 @@ export default function EarningsPage() {
       {/* Withdrawal Modal */}
       {isWithdrawModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-0 sm:p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsWithdrawModalOpen(false)}
           />
           <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom duration-300">
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Withdraw Funds</h3>
-                <button 
+                <h3 className="text-xl font-bold !text-gray-900 dark:!text-gray-100">Withdraw Funds</h3>
+                <button
                   onClick={() => setIsWithdrawModalOpen(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                 >
@@ -334,7 +333,7 @@ export default function EarningsPage() {
               <div className="space-y-4">
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Available to Withdraw</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">₹{wallet?.balance.toLocaleString()}</p>
+                  <p className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">₹{wallet?.balance.toLocaleString()}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -363,7 +362,7 @@ export default function EarningsPage() {
                 </div>
 
                 <div className="pt-4">
-                  <Button 
+                  <Button
                     onClick={handleWithdraw}
                     fullWidth
                     disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (wallet?.balance ?? 0)}

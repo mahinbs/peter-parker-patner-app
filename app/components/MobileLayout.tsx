@@ -96,6 +96,8 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
     return 'Dashboard';
   };
 
+  const isDashboard = pathname === '/dashboard';
+
   return (
     <div className="min-h-screen w-full  bg-[var(--color-background)] text-[var(--text-primary)] pb-20 lg:h-full lg:flex lg:flex-col lg:pb-0">
       {/* Premium Header with logo */}
@@ -103,7 +105,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        className="sticky top-0 z-50 gradient-primary text-white shadow-xl lg:relative lg:sticky"
+        className={`sticky top-0 z-50 text-white lg:relative lg:sticky ${isDashboard ? 'bg-transparent shadow-none' : 'gradient-primary shadow-xl'}`}
       >
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-3">
@@ -151,7 +153,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               }}
               className={`h-2 w-2 rounded-full ${statusConfig.color}`}
             />
-            <span className="text-white/90">{statusConfig.label}</span>
+            <span className="text-black/90">{statusConfig.label}</span>
           </motion.div>
         </div>
       </motion.header>
@@ -164,7 +166,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        className="fixed lg:sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[var(--neutral-200)]/80 z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] max-w-md safe-bottom lg:mt-auto lg:flex-shrink-0"
+        className="fixed lg:sticky bottom-0 left-0 right-0 bg-[var(--color-surface)]/95 backdrop-blur-md border-t border-[var(--neutral-800)] z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] max-w-md safe-bottom lg:mt-auto lg:flex-shrink-0"
       >
         <div className="grid grid-cols-4 h-20 lg:h-20">
           {navItems.map((item, index) => {
@@ -181,7 +183,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
                 <Link
                   href={item.href}
                   className={`flex flex-col items-center justify-center space-y-1.5 transition-all duration-300 w-full h-full active:scale-95 flex-shrink-0 ${
-                    isActive ? 'text-[var(--color-secondary-accent)]' : 'text-[var(--neutral-400)] hover:text-[var(--neutral-600)]'
+                    isActive ? 'text-[var(--color-secondary-accent)]' : 'text-[var(--neutral-400)] hover:text-white'
                   }`}
                 >
                   <motion.div 

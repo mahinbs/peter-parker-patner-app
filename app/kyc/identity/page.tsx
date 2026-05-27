@@ -145,7 +145,7 @@ export default function KYCIdentityPage() {
     <MobileContainer>
       <div className="p-4 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
             Identity Verification
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -164,11 +164,10 @@ export default function KYCIdentityPage() {
                   <button
                     key={type}
                     onClick={() => setIdType(type)}
-                    className={`p-3 rounded-xl border-2 transition-colors ${
-                      idType === type
-                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                    className={`p-3 rounded-xl border-2 transition-colors ${idType === type
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                      : 'border-gray-300 dark:border-gray-600'
+                      }`}
                   >
                     <span className="text-sm font-medium capitalize">{type}</span>
                   </button>

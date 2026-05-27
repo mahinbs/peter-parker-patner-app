@@ -30,7 +30,7 @@ export default function KYCQualificationPage() {
     // Convert base64 to Blob
     const base64Data = base64.split(',')[1];
     const blob = await fetch(`data:image/png;base64,${base64Data}`).then(res => res.blob());
-    
+
     const { data, error } = await supabase.storage
       .from('kyc-documents')
       .upload(path, blob, {
@@ -39,7 +39,7 @@ export default function KYCQualificationPage() {
       });
 
     if (error) throw error;
-    
+
     const { data: { publicUrl } } = supabase.storage
       .from('kyc-documents')
       .getPublicUrl(path);
@@ -94,7 +94,7 @@ export default function KYCQualificationPage() {
             <FiX size={24} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
               Valet Qualification
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -114,7 +114,7 @@ export default function KYCQualificationPage() {
                   {licenseFront ? (
                     <>
                       <img src={licenseFront} alt="Front" className="w-full h-full object-cover" />
-                      <button 
+                      <button
                         onClick={() => setLicenseFront(null)}
                         className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-lg"
                       >
@@ -123,10 +123,10 @@ export default function KYCQualificationPage() {
                     </>
                   ) : (
                     <label className="cursor-pointer flex flex-col items-center gap-2 p-4 text-center">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
                         onChange={(e) => e.target.files?.[0] && handleFileUpload('front', e.target.files[0])}
                       />
                       <FiUpload size={24} className="text-gray-400" />
@@ -143,7 +143,7 @@ export default function KYCQualificationPage() {
                   {licenseBack ? (
                     <>
                       <img src={licenseBack} alt="Back" className="w-full h-full object-cover" />
-                      <button 
+                      <button
                         onClick={() => setLicenseBack(null)}
                         className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-lg"
                       >
@@ -152,10 +152,10 @@ export default function KYCQualificationPage() {
                     </>
                   ) : (
                     <label className="cursor-pointer flex flex-col items-center gap-2 p-4 text-center">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
                         onChange={(e) => e.target.files?.[0] && handleFileUpload('back', e.target.files[0])}
                       />
                       <FiUpload size={24} className="text-gray-400" />

@@ -46,7 +46,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Image
@@ -57,7 +57,7 @@ export default function LoginPage() {
             className="mx-auto mb-4"
           />
           <h1 className="text-3xl font-bold gradient-text mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your valet partner account</p>
+          <p className="text-[var(--text-secondary)]">Sign in to your valet partner account</p>
         </div>
 
         <Card>
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
             {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
             
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-center text-sm text-[var(--text-surface-secondary)]">
               Don't have an account?{' '}
               <button
                 type="button"

@@ -39,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 ? 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]' 
                 : 'border-[var(--neutral-200)] focus:border-[var(--color-primary-accent)] focus:ring-[var(--color-primary-accent)]'
               }
-              bg-[var(--color-surface)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]
+              bg-[var(--color-surface)] text-[var(--text-surface)] placeholder:text-[var(--text-surface-secondary)]
               shadow-[var(--shadow-xs)]
               focus:outline-none focus:ring-2 focus:ring-opacity-20
               ${className}

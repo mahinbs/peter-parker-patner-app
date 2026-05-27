@@ -91,7 +91,7 @@ export default function VehiclePickupPage() {
               <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
                 <FiCheck className="text-green-600 dark:text-green-400" size={48} />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
                 Vehicle Inspection Complete
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -124,7 +124,7 @@ export default function VehiclePickupPage() {
                 <div className="inline-flex p-4 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
                   <FiMapPin className="text-blue-600 dark:text-blue-400" size={32} />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
                   Confirm Vehicle Parking
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -148,21 +148,21 @@ export default function VehiclePickupPage() {
                 />
 
                 <Card className={`border-2 transition-all ${isParked
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                    : 'border-gray-300 dark:border-gray-600'
+                  ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                  : 'border-gray-300 dark:border-gray-600'
                   }`}>
                   <button
                     onClick={() => setIsParked(!isParked)}
                     className="w-full flex items-center gap-3"
                   >
                     <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isParked
-                        ? 'border-green-500 bg-green-500'
-                        : 'border-gray-300 dark:border-gray-600'
+                      ? 'border-green-500 bg-green-500'
+                      : 'border-gray-300 dark:border-gray-600'
                       }`}>
                       {isParked && <FiCheckCircle className="text-white" size={16} />}
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="font-semibold !text-gray-900 dark:!text-gray-100">
                         Vehicle is parked
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -192,7 +192,7 @@ export default function VehiclePickupPage() {
     <MobileContainer>
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
             Vehicle Inspection
           </h1>
           <div className="flex flex-col items-end">
@@ -203,7 +203,7 @@ export default function VehiclePickupPage() {
 
         <Card>
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
               Capture Vehicle Images
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -256,7 +256,7 @@ export default function VehiclePickupPage() {
 
         <Card>
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
               Existing Damage/Dents
             </h2>
             <div className="grid grid-cols-2 gap-2">
@@ -266,8 +266,8 @@ export default function VehiclePickupPage() {
                     key={area}
                     onClick={() => toggleDent(area)}
                     className={`p-3 rounded-xl border-2 transition-colors text-sm ${dents.includes(area)
-                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                        : 'border-gray-300 dark:border-gray-600'
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                      : 'border-gray-300 dark:border-gray-600'
                       }`}
                   >
                     {area}
@@ -314,7 +314,7 @@ export default function VehiclePickupPage() {
                   value={odometer}
                   onChange={(e) => setOdometer(e.target.value)}
                   placeholder="Enter odometer reading"
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 !text-gray-900 dark:!text-gray-100 focus:outline-none focus:border-teal-500"
                 />
               </div>
             </div>

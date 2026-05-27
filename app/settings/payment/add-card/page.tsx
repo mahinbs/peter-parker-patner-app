@@ -42,14 +42,14 @@ export default function AddCardPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateCard()) {
       alert('Please fill all card details correctly');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
@@ -88,11 +88,11 @@ export default function AddCardPage() {
         <div className="flex items-center gap-3 mb-2">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-300 text-[var(--text-primary)] rounded-lg transition-colors"
           >
-            <FiArrowLeft size={20} className="text-gray-900 dark:text-gray-100" />
+            <FiArrowLeft size={20} className="" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">
             Add Card
           </h1>
         </div>
@@ -104,7 +104,7 @@ export default function AddCardPage() {
                 <FiCreditCard className="text-teal-600 dark:text-teal-400" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="font-semibold !text-gray-100">
                   Debit/Credit Card
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">

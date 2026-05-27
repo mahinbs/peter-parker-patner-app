@@ -66,7 +66,7 @@ export default function ParkingLocationsPage() {
     <MobileContainer>
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
             Parking Locations
           </h1>
           <Button
@@ -98,7 +98,7 @@ export default function ParkingLocationsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-gray-900 dark:text-gray-100">
+                        <h3 className="font-bold !text-gray-900 dark:!text-gray-100">
                           {location.name}
                         </h3>
                         {location.isActive && (
@@ -117,13 +117,13 @@ export default function ParkingLocationsPage() {
                   <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Slots</p>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="text-sm font-semibold !text-gray-900 dark:!text-gray-100">
                         {location.availableSlots}/{location.totalSlots} available
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Base Price</p>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="text-sm font-semibold !text-gray-900 dark:!text-gray-100">
                         ₹{location.basePrice}/hour
                       </p>
                     </div>

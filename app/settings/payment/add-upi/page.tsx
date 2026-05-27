@@ -23,7 +23,7 @@ export default function AddUPIPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateUPI(upiId)) {
       alert('Please enter a valid UPI ID (e.g., username@paytm)');
       return;
@@ -35,7 +35,7 @@ export default function AddUPIPage() {
     }
 
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
@@ -55,7 +55,7 @@ export default function AddUPIPage() {
               <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
                 <FiCheckCircle className="text-green-600 dark:text-green-400" size={48} />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
                 UPI ID Added Successfully!
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
@@ -78,7 +78,7 @@ export default function AddUPIPage() {
           >
             <FiArrowLeft size={20} className="text-gray-900 dark:text-gray-100" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
             Add UPI ID
           </h1>
         </div>
@@ -90,7 +90,7 @@ export default function AddUPIPage() {
                 <FiCreditCard className="text-teal-600 dark:text-teal-400" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="font-semibold !text-gray-900 dark:!text-gray-100">
                   UPI Payment Method
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
