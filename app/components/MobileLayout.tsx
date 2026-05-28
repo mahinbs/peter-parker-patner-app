@@ -7,8 +7,9 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { IoHomeSharp, IoHome } from 'react-icons/io5';
 import { IoWallet, IoWalletOutline } from 'react-icons/io5';
-import { FaUserCircle, FaRegUserCircle } from 'react-icons/fa';
-import { IoSettings, IoSettingsOutline } from 'react-icons/io5';
+import { IoGift, IoGiftOutline } from 'react-icons/io5';
+import { IoPersonCircle, IoPersonCircleOutline } from 'react-icons/io5';
+import { IoCarSport, IoCarSportOutline } from 'react-icons/io5';
 import { useAuthStore, PartnerStatus } from '../store/useAuthStore';
 
 interface MobileLayoutProps {
@@ -34,22 +35,28 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       label: 'Home' 
     },
     { 
+      href: '/parking-locations', 
+      iconFilled: IoCarSport, 
+      iconOutline: IoCarSportOutline, 
+      label: 'Parking' 
+    },
+    { 
       href: '/earnings', 
       iconFilled: IoWallet, 
       iconOutline: IoWalletOutline, 
-      label: 'Earnings' 
+      label: 'Wallet' 
+    },
+    { 
+      href: '/support', 
+      iconFilled: IoGift, 
+      iconOutline: IoGiftOutline, 
+      label: 'Offers' 
     },
     { 
       href: '/profile', 
-      iconFilled: FaUserCircle, 
-      iconOutline: FaRegUserCircle, 
+      iconFilled: IoPersonCircle, 
+      iconOutline: IoPersonCircleOutline, 
       label: 'Profile' 
-    },
-    { 
-      href: '/settings', 
-      iconFilled: IoSettings, 
-      iconOutline: IoSettingsOutline, 
-      label: 'Settings' 
     },
   ];
 
@@ -159,18 +166,20 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       </motion.header>
 
       {/* Main Content */}
-      <main className="max-w-md mx-auto w-full px-3 sm:px-4 py-4 animate-in pb-20 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:min-h-0 lg:pb-4">{children}</main>
+      <main className="max-w-md mx-auto w-full px-3 sm:px-4 py-4 animate-in pb-28 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:min-h-0 lg:pb-4">{children}</main>
 
       {/* Bottom Navigation */}
       <motion.nav 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        className="fixed lg:sticky bottom-0 left-0 right-0 bg-[var(--color-surface)]/95 backdrop-blur-md border-t border-[var(--neutral-800)] z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] max-w-md safe-bottom lg:mt-auto lg:flex-shrink-0"
+        className="fixed lg:sticky bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-1.25rem)] max-w-md safe-bottom rounded-[28px] border border-white/10 bg-[#131c26]/95 backdrop-blur-xl z-50 shadow-[0_10px_30px_rgba(0,0,0,0.45)] lg:mt-auto lg:shrink-0"
       >
-        <div className="grid grid-cols-4 h-20 lg:h-20">
+        <div className="grid grid-cols-5 h-[76px] px-1.5">
           {navItems.map((item, index) => {
-            const isActive = pathname === item.href;
+            const isActive = item.href === '/parking-locations'
+              ? pathname?.startsWith('/parking-locations')
+              : pathname === item.href;
             const Icon = isActive ? item.iconFilled : item.iconOutline;
             return (
               <motion.div
@@ -178,40 +187,33 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex-shrink-0"
+                className="shrink-0"
               >
                 <Link
                   href={item.href}
-                  className={`flex flex-col items-center justify-center space-y-1.5 transition-all duration-300 w-full h-full active:scale-95 flex-shrink-0 ${
-                    isActive ? 'text-[var(--color-secondary-accent)]' : 'text-[var(--neutral-400)] hover:text-white'
+                  className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-full h-full active:scale-95 shrink-0 ${
+                    isActive ? 'text-[#4ADE80]' : 'text-[#8A939F] hover:text-[#B4BDC8]'
                   }`}
                 >
                   <motion.div 
                     className={`relative transition-all duration-300 ${
-                      isActive ? 'scale-110 -translate-y-0.5' : 'scale-100'
+                      isActive ? 'scale-105' : 'scale-100'
                     }`}
-                    animate={isActive ? { scale: 1.1, y: -2 } : { scale: 1, y: 0 }}
+                    animate={isActive ? { scale: 1.05, y: -1 } : { scale: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
                     <Icon 
                       className={`transition-all duration-300 ${
                         isActive 
-                          ? 'w-7 h-7 text-[var(--color-secondary-accent)] drop-shadow-sm' 
-                          : 'w-6 h-6 text-[var(--neutral-400)]'
+                          ? 'w-6 h-6 text-[#4ADE80] drop-shadow-sm' 
+                          : 'w-6 h-6 text-[#8A939F]'
                       }`}
                     />
-                    {isActive && (
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 gradient-primary rounded-full animate-pulse-slow"
-                      />
-                    )}
                   </motion.div>
-                  <span className={`text-xs tracking-wide transition-all duration-300 ${
+                  <span className={`text-[11px] tracking-wide transition-all duration-300 ${
                     isActive 
-                      ? 'font-bold text-[var(--color-secondary-accent)]' 
-                      : 'font-medium text-[var(--neutral-400)]'
+                      ? 'font-semibold text-[#4ADE80]' 
+                      : 'font-medium text-[#8A939F]'
                   }`}>
                     {item.label}
                   </span>
