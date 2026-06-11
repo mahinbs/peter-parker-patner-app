@@ -1,46 +1,35 @@
 'use client';
 
-import type { ChangeEvent, ReactNode } from 'react';
+import { forwardRef } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 
-interface DarkInputProps {
-  type?: 'text' | 'email' | 'tel' | 'password' | 'number' | 'date';
-  placeholder?: string;
-  value?: string | number;
-  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
-  className?: string;
-  disabled?: boolean;
-  required?: boolean;
-  maxLength?: number;
+interface DarkInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   error?: string;
   helperText?: string;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   onRightIconClick?: () => void;
-  autoFocus?: boolean;
-  name?: string;
-  autoComplete?: string;
 }
 
-export default function DarkInput({
-  type = 'text',
-  placeholder,
-  value,
-  onChange,
-  className = '',
-  disabled = false,
-  required = false,
-  maxLength,
-  label,
-  error,
-  helperText,
-  leftIcon,
-  rightIcon,
-  onRightIconClick,
-  autoFocus,
-  name,
-  autoComplete,
-}: DarkInputProps) {
+/**
+ * Light-themed input that forwards its ref so react-hook-form's `register()`
+ * can wire up validation. Spread any native <input> props onto it.
+ */
+const DarkInput = forwardRef<HTMLInputElement, DarkInputProps>(function DarkInput(
+  {
+    label,
+    error,
+    helperText,
+    leftIcon,
+    rightIcon,
+    onRightIconClick,
+    className = '',
+    required,
+    ...inputProps
+  },
+  ref,
+) {
   return (
     <div className="w-full">
       {label && (
@@ -56,19 +45,12 @@ export default function DarkInput({
           </div>
         )}
         <input
-          type={type}
-          name={name}
-          autoComplete={autoComplete}
-          autoFocus={autoFocus}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
+          ref={ref}
           required={required}
-          maxLength={maxLength}
           className={`w-full ${leftIcon ? 'pl-12' : 'pl-4'} ${rightIcon ? 'pr-12' : 'pr-4'} py-3.5 bg-neutral-50 border border-neutral-200 rounded-2xl focus:outline-none focus:border-[#34C0CA] focus:ring-4 focus:ring-[#34C0CA]/15 text-base text-[#0F1415] placeholder-neutral-400 disabled:bg-neutral-100 disabled:text-neutral-400 transition ${
             error ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''
           } ${className}`}
+          {...inputProps}
         />
         {rightIcon && (
           <button
@@ -84,4 +66,6 @@ export default function DarkInput({
       {helperText && !error && <p className="mt-1.5 text-xs text-neutral-500">{helperText}</p>}
     </div>
   );
-}
+});
+
+export default DarkInput;
