@@ -3,11 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { FiMapPin, FiDollarSign, FiClock } from 'react-icons/fi';
-import Button from '../../components/Button';
-import Input from '../../components/Input';
-import Card from '../../components/Card';
+import { FiMapPin, FiDollarSign, FiClock, FiArrowLeft } from 'react-icons/fi';
 import MobileContainer from '../../components/MobileContainer';
+import { DarkInput, GradientButton, SectionLabel } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 
 interface LocationForm {
@@ -18,165 +16,162 @@ interface LocationForm {
   basePrice: number;
   minDuration: number;
   extensionPrice: number;
-  vehicleTypes: string[];
 }
 
 export default function NewLocationPage() {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<LocationForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LocationForm>();
   const [vehicleTypes, setVehicleTypes] = useState<string[]>(['car']);
+  const [submitting, setSubmitting] = useState(false);
 
   const toggleVehicleType = (type: string) => {
-    setVehicleTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
+    setVehicleTypes(prev => (prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]));
   };
 
   const onSubmit = async (data: LocationForm) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('parking_locations')
-      .insert({
+    setSubmitting(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('parking_locations').insert({
         partner_id: user.id,
         name: data.name,
         address: data.address,
         total_slots: data.totalSlots,
-        available_slots: data.totalSlots, // Initially all slots available
+        available_slots: data.totalSlots,
       });
-
-    if (!error) {
-      router.push('/parking-locations');
-    } else {
-      console.error('Error saving location:', error);
     }
+    setSubmitting(false);
+    router.push('/parking-locations');
   };
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
-          Add Parking Location
-        </h1>
+      <div className="p-4 space-y-4 pb-32">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="w-11 h-11 rounded-full bg-[#13191C] flex items-center justify-center text-white active:scale-95 shrink-0 shadow-md"
+          >
+            <FiArrowLeft size={18} />
+          </button>
+          <div>
+            <p className="text-xs text-neutral-500">New</p>
+            <h1 className="text-xl font-extrabold text-[#0F1415] leading-tight">Parking location</h1>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Card>
-            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-              Location Details
-            </h2>
-            <div className="space-y-4">
-              <Input
-                label="Parking Name"
-                placeholder="e.g., Downtown Parking"
-                {...register('name', { required: 'Parking name is required' })}
-                error={errors.name?.message}
-              />
-              <Input
-                label="Address"
-                icon={<FiMapPin />}
-                placeholder="Enter full address"
-                {...register('address', { required: 'Address is required' })}
-                error={errors.address?.message}
-              />
-              <Input
-                label="Landmark"
-                placeholder="Nearby landmark"
-                {...register('landmark')}
-              />
-            </div>
-          </Card>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="space-y-3">
+            <SectionLabel>Location details</SectionLabel>
+            <DarkInput
+              label="Name"
+              placeholder="e.g. Downtown parking"
+              error={errors.name?.message as string}
+              {...(register('name', { required: 'Parking name is required' }) as any)}
+            />
+            <DarkInput
+              label="Address"
+              placeholder="Full address"
+              leftIcon={<FiMapPin size={18} />}
+              error={errors.address?.message as string}
+              {...(register('address', { required: 'Address is required' }) as any)}
+            />
+            <DarkInput
+              label="Landmark (optional)"
+              placeholder="Nearby landmark"
+              {...(register('landmark') as any)}
+            />
+          </div>
 
-          <Card>
-            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-              Capacity & Pricing
-            </h2>
-            <div className="space-y-4">
-              <Input
-                label="Total Slots"
-                type="number"
-                placeholder="20"
-                {...register('totalSlots', {
-                  required: 'Total slots is required',
-                  min: { value: 1, message: 'Must be at least 1' },
-                })}
-                error={errors.totalSlots?.message}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Base Price/Hour"
-                  type="number"
-                  icon={<FiDollarSign />}
-                  placeholder="50"
-                  {...register('basePrice', {
-                    required: 'Base price is required',
-                    min: { value: 1, message: 'Must be at least ₹1' },
-                  })}
-                  error={errors.basePrice?.message}
-                />
-                <Input
-                  label="Min Duration (hours)"
-                  type="number"
-                  icon={<FiClock />}
-                  placeholder="1"
-                  {...register('minDuration', {
-                    required: 'Minimum duration is required',
-                    min: { value: 1, message: 'Must be at least 1 hour' },
-                  })}
-                  error={errors.minDuration?.message}
-                />
-              </div>
-              <Input
-                label="Extension Price/Hour"
+          <div className="space-y-3">
+            <SectionLabel>Capacity & pricing</SectionLabel>
+            <DarkInput
+              label="Total slots"
+              type="number"
+              placeholder="20"
+              error={errors.totalSlots?.message as string}
+              {...(register('totalSlots', {
+                required: 'Total slots is required',
+                min: { value: 1, message: 'Must be at least 1' },
+              }) as any)}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <DarkInput
+                label="Base ₹/hr"
                 type="number"
                 placeholder="50"
-                {...register('extensionPrice', {
-                  required: 'Extension price is required',
-                })}
-                error={errors.extensionPrice?.message}
+                leftIcon={<FiDollarSign size={18} />}
+                error={errors.basePrice?.message as string}
+                {...(register('basePrice', {
+                  required: 'Base price is required',
+                  min: { value: 1, message: '₹1 min' },
+                }) as any)}
+              />
+              <DarkInput
+                label="Min duration"
+                type="number"
+                placeholder="1"
+                leftIcon={<FiClock size={18} />}
+                error={errors.minDuration?.message as string}
+                {...(register('minDuration', {
+                  required: 'Required',
+                  min: { value: 1, message: '1 hour min' },
+                }) as any)}
               />
             </div>
-          </Card>
+            <DarkInput
+              label="Extension ₹/hr"
+              type="number"
+              placeholder="50"
+              error={errors.extensionPrice?.message as string}
+              {...(register('extensionPrice', { required: 'Required' }) as any)}
+            />
+          </div>
 
-          <Card>
-            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-              Vehicle Types Supported
-            </h2>
-            <div className="grid grid-cols-3 gap-3">
-              {['Car', 'SUV', 'Premium'].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleVehicleType(type.toLowerCase())}
-                  className={`p-3 rounded-xl border-2 transition-colors ${vehicleTypes.includes(type.toLowerCase())
-                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                    : 'border-gray-300 dark:border-gray-600'
+          <div className="space-y-3">
+            <SectionLabel>Vehicles supported</SectionLabel>
+            <div className="grid grid-cols-3 gap-2">
+              {['Car', 'SUV', 'Premium'].map(type => {
+                const active = vehicleTypes.includes(type.toLowerCase());
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => toggleVehicleType(type.toLowerCase())}
+                    className={`py-3 rounded-2xl text-sm font-semibold border transition ${
+                      active
+                        ? 'bg-gradient-to-r from-[#34C0CA] to-[#66BD59] text-white border-transparent'
+                        : 'bg-neutral-50 text-[#0F1415] border-neutral-200'
                     }`}
-                >
-                  <span className="text-sm font-medium">{type}</span>
-                </button>
-              ))}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
             </div>
-          </Card>
-
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              onClick={() => router.back()}
-              variant="outline"
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1">
-              Save Location
-            </Button>
           </div>
         </form>
+      </div>
+
+      <div className="fixed bottom-20 inset-x-0 p-4 z-30">
+        <div className="max-w-md mx-auto flex gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex-1 py-3 rounded-full bg-white border border-neutral-200 text-[#0F1415] font-semibold active:scale-[0.98]"
+          >
+            Cancel
+          </button>
+          <GradientButton fullWidth size="md" loading={submitting} onClick={handleSubmit(onSubmit)}>
+            Save
+          </GradientButton>
+        </div>
       </div>
     </MobileContainer>
   );
 }
-

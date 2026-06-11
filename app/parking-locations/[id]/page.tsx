@@ -4,10 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { FiMapPin, FiDollarSign, FiClock, FiArrowLeft, FiTrash2 } from 'react-icons/fi';
-import Button from '../../components/Button';
-import Input from '../../components/Input';
-import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { DarkCard, DarkInput, GradientButton, SectionLabel } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 
 interface LocationForm {
@@ -18,35 +16,35 @@ interface LocationForm {
   basePrice: number;
   minDuration: number;
   extensionPrice: number;
-  vehicleTypes: string[];
-  isActive: boolean;
 }
 
 export default function EditLocationPage() {
   const router = useRouter();
   const params = useParams();
   const locationId = params.id as string;
-
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<LocationForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<LocationForm>();
   const [vehicleTypes, setVehicleTypes] = useState<string[]>(['car']);
   const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Load location data from Supabase
   useEffect(() => {
     const fetchLocation = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('parking_locations')
         .select('*')
         .eq('id', locationId)
         .single();
-
-      if (data && !error) {
+      if (data) {
         setValue('name', data.name);
         setValue('address', data.address);
         setValue('totalSlots', data.total_slots);
-        // Map other fields if they were in the DB, for now defaults
         setValue('basePrice', 50);
         setValue('minDuration', 1);
         setValue('extensionPrice', 50);
@@ -54,59 +52,39 @@ export default function EditLocationPage() {
       }
       setIsLoading(false);
     };
-
-    if (locationId) {
-      fetchLocation();
-    }
+    if (locationId) fetchLocation();
   }, [locationId, setValue]);
 
   const toggleVehicleType = (type: string) => {
-    setVehicleTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
+    setVehicleTypes(prev => (prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]));
   };
 
   const onSubmit = async (data: LocationForm) => {
-    const { error } = await supabase
+    setSaving(true);
+    await supabase
       .from('parking_locations')
       .update({
         name: data.name,
         address: data.address,
         total_slots: data.totalSlots,
-        // Update available_slots logic can be more complex, for now keep simple
         available_slots: data.totalSlots,
       })
       .eq('id', locationId);
-
-    if (!error) {
-      router.push('/parking-locations');
-    } else {
-      console.error('Error updating location:', error);
-    }
+    setSaving(false);
+    router.push('/parking-locations');
   };
 
   const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this location? This action cannot be undone.')) {
-      const { error } = await supabase
-        .from('parking_locations')
-        .delete()
-        .eq('id', locationId);
-
-      if (!error) {
-        router.push('/parking-locations');
-      }
-    }
+    if (!confirm('Delete this location?')) return;
+    await supabase.from('parking_locations').delete().eq('id', locationId);
+    router.push('/parking-locations');
   };
 
   if (isLoading) {
     return (
       <MobileContainer>
-        <div className="p-4 space-y-4">
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400">Loading location details...</p>
-          </div>
+        <div className="p-6 flex items-center justify-center min-h-[40vh]">
+          <div className="w-12 h-12 border-4 border-neutral-200 border-t-[#66BD59] rounded-full animate-spin" />
         </div>
       </MobileContainer>
     );
@@ -114,171 +92,158 @@ export default function EditLocationPage() {
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="p-4 space-y-5 pb-32">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="w-11 h-11 rounded-full bg-[#13191C] flex items-center justify-center text-white active:scale-95 shrink-0 shadow-md"
           >
-            <FiArrowLeft size={20} className="text-gray-900 dark:text-gray-100" />
+            <FiArrowLeft size={18} />
           </button>
-          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
-            Edit Location
-          </h1>
+          <div>
+            <p className="text-xs text-neutral-500">Edit</p>
+            <h1 className="text-xl font-extrabold text-[#0F1415] leading-tight">Parking location</h1>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Card>
-            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-              Location Details
-            </h2>
-            <div className="space-y-4">
-              <Input
-                label="Parking Name"
-                placeholder="e.g., Downtown Parking"
-                {...register('name', { required: 'Parking name is required' })}
-                error={errors.name?.message}
-              />
-              <Input
-                label="Address"
-                icon={<FiMapPin />}
-                placeholder="Enter full address"
-                {...register('address', { required: 'Address is required' })}
-                error={errors.address?.message}
-              />
-              <Input
-                label="Landmark"
-                placeholder="Nearby landmark"
-                {...register('landmark')}
-              />
-            </div>
-          </Card>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="space-y-3">
+            <SectionLabel>Location details</SectionLabel>
+            <DarkInput
+              label="Name"
+              placeholder="e.g. Downtown parking"
+              error={errors.name?.message as string}
+              {...(register('name', { required: 'Parking name is required' }) as any)}
+            />
+            <DarkInput
+              label="Address"
+              placeholder="Full address"
+              leftIcon={<FiMapPin size={18} />}
+              error={errors.address?.message as string}
+              {...(register('address', { required: 'Address is required' }) as any)}
+            />
+            <DarkInput
+              label="Landmark (optional)"
+              placeholder="Nearby landmark"
+              {...(register('landmark') as any)}
+            />
+          </div>
 
-          <Card>
-            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-              Capacity & Pricing
-            </h2>
-            <div className="space-y-4">
-              <Input
-                label="Total Slots"
-                type="number"
-                placeholder="20"
-                {...register('totalSlots', {
-                  required: 'Total slots is required',
-                  min: { value: 1, message: 'Must be at least 1' },
-                })}
-                error={errors.totalSlots?.message}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Base Price/Hour"
-                  type="number"
-                  icon={<FiDollarSign />}
-                  placeholder="50"
-                  {...register('basePrice', {
-                    required: 'Base price is required',
-                    min: { value: 1, message: 'Must be at least ₹1' },
-                  })}
-                  error={errors.basePrice?.message}
-                />
-                <Input
-                  label="Min Duration (hours)"
-                  type="number"
-                  icon={<FiClock />}
-                  placeholder="1"
-                  {...register('minDuration', {
-                    required: 'Minimum duration is required',
-                    min: { value: 1, message: 'Must be at least 1 hour' },
-                  })}
-                  error={errors.minDuration?.message}
-                />
-              </div>
-              <Input
-                label="Extension Price/Hour"
+          <div className="space-y-3">
+            <SectionLabel>Capacity & pricing</SectionLabel>
+            <DarkInput
+              label="Total slots"
+              type="number"
+              placeholder="20"
+              error={errors.totalSlots?.message as string}
+              {...(register('totalSlots', {
+                required: 'Required',
+                min: { value: 1, message: 'Min 1' },
+              }) as any)}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <DarkInput
+                label="Base ₹/hr"
                 type="number"
                 placeholder="50"
-                {...register('extensionPrice', {
-                  required: 'Extension price is required',
-                })}
-                error={errors.extensionPrice?.message}
+                leftIcon={<FiDollarSign size={18} />}
+                error={errors.basePrice?.message as string}
+                {...(register('basePrice', {
+                  required: 'Required',
+                  min: { value: 1, message: '₹1 min' },
+                }) as any)}
+              />
+              <DarkInput
+                label="Min duration"
+                type="number"
+                placeholder="1"
+                leftIcon={<FiClock size={18} />}
+                error={errors.minDuration?.message as string}
+                {...(register('minDuration', {
+                  required: 'Required',
+                  min: { value: 1, message: '1 hr min' },
+                }) as any)}
               />
             </div>
-          </Card>
+            <DarkInput
+              label="Extension ₹/hr"
+              type="number"
+              placeholder="50"
+              error={errors.extensionPrice?.message as string}
+              {...(register('extensionPrice', { required: 'Required' }) as any)}
+            />
+          </div>
 
-          <Card>
-            <h2 className="text-lg font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-              Vehicle Types Supported
-            </h2>
-            <div className="grid grid-cols-3 gap-3">
-              {['Car', 'SUV', 'Premium'].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleVehicleType(type.toLowerCase())}
-                  className={`p-3 rounded-xl border-2 transition-colors ${vehicleTypes.includes(type.toLowerCase())
-                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                    : 'border-gray-300 dark:border-gray-600'
+          <div className="space-y-3">
+            <SectionLabel>Vehicles supported</SectionLabel>
+            <div className="grid grid-cols-3 gap-2">
+              {['Car', 'SUV', 'Premium'].map(type => {
+                const active = vehicleTypes.includes(type.toLowerCase());
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => toggleVehicleType(type.toLowerCase())}
+                    className={`py-3 rounded-2xl text-sm font-semibold border transition ${
+                      active
+                        ? 'bg-gradient-to-r from-[#34C0CA] to-[#66BD59] text-white border-transparent'
+                        : 'bg-neutral-50 text-[#0F1415] border-neutral-200'
                     }`}
-                >
-                  <span className="text-sm font-medium">{type}</span>
-                </button>
-              ))}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
             </div>
-          </Card>
+          </div>
 
-          <Card>
+          <DarkCard>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold !text-gray-900 dark:!text-gray-100 mb-1">
-                  Location Status
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {isActive ? 'Location is active and accepting requests' : 'Location is inactive'}
+                <p className="text-sm font-bold">Location status</p>
+                <p className="text-[11px] text-white/55 mt-0.5">
+                  {isActive ? 'Active — accepting requests' : 'Inactive'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`relative w-14 h-7 rounded-full transition-colors ${isActive
-                  ? 'bg-teal-500'
-                  : 'bg-gray-300'
-                  }`}
+                className={`w-12 h-7 rounded-full transition relative ${
+                  isActive ? 'bg-gradient-to-r from-[#34C0CA] to-[#66BD59]' : 'bg-white/15'
+                }`}
               >
-                <span
-                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${isActive ? 'translate-x-7' : 'translate-x-0'
-                    }`}
+                <div
+                  className={`w-6 h-6 bg-white rounded-full shadow absolute top-0.5 transition ${
+                    isActive ? 'left-[22px]' : 'left-0.5'
+                  }`}
                 />
               </button>
             </div>
-          </Card>
+          </DarkCard>
 
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              onClick={() => router.back()}
-              variant="outline"
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1">
-              Save Changes
-            </Button>
-          </div>
-
-          <Button
+          <button
             type="button"
             onClick={handleDelete}
-            variant="danger"
-            fullWidth
-            className="flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-2xl bg-[#EF4444]/10 border border-[#EF4444]/25 text-[#EF4444] font-semibold flex items-center justify-center gap-2 active:scale-[0.98]"
           >
-            <FiTrash2 size={18} />
-            Delete Location
-          </Button>
+            <FiTrash2 size={16} /> Delete location
+          </button>
         </form>
+      </div>
+
+      <div className="fixed bottom-20 inset-x-0 p-4 z-30">
+        <div className="max-w-md mx-auto flex gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex-1 py-3 rounded-full bg-white border border-neutral-200 text-[#0F1415] font-semibold active:scale-[0.98]"
+          >
+            Cancel
+          </button>
+          <GradientButton fullWidth size="md" loading={saving} onClick={handleSubmit(onSubmit)}>
+            Save
+          </GradientButton>
+        </div>
       </div>
     </MobileContainer>
   );
 }
-

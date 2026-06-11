@@ -4,12 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { FiMail, FiLock } from 'react-icons/fi';
-import Button from '../../components/Button';
-import Input from '../../components/Input';
-import Card from '../../components/Card';
 import Image from 'next/image';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
+import { GradientButton, DarkInput } from '../../components/ui';
 
 interface LoginForm {
   email: string;
@@ -26,90 +24,76 @@ export default function LoginPage() {
   const handleLogin = async (data: LoginForm) => {
     setError(null);
     setLoading(true);
-    try {
-      const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (signInError) {
-        setError(signInError.message);
-      } else if (signInData.user) {
-        await fetchProfile();
-        router.push('/dashboard');
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+    if (signInError) setError(signInError.message);
+    else if (signInData.user) {
+      await fetchProfile();
+      router.push('/dashboard');
     }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 safe-bottom">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Image
-            src="/icon.png"
-            alt="Valet Partner Logo"
-            width={120}
-            height={120}
-            className="mx-auto mb-4"
-          />
-          <h1 className="text-3xl font-bold gradient-text mb-2">Welcome Back</h1>
-          <p className="text-[var(--text-secondary)]">Sign in to your valet partner account</p>
+          <div className="w-20 h-20 rounded-3xl mx-auto mb-4 bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center shadow-xl p-3">
+            <Image src="/icon.png" alt="" width={56} height={56} className="object-contain" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-[#0F1415] tracking-tight">Welcome back</h1>
+          <p className="text-sm text-neutral-500 mt-2">Sign in to your valet partner account</p>
         </div>
 
-        <Card>
-          <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
-            <Input
-              label="Email Address"
-              type="email"
-              icon={<FiMail />}
-              placeholder="Enter your email"
-              {...register('email', {
-                required: 'Email is required',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Please enter a valid email address',
-                },
-              })}
-              error={errors.email?.message}
-            />
-            
-            <Input
-              label="Password"
-              type="password"
-              icon={<FiLock />}
-              placeholder="Enter your password"
-              {...register('password', {
-                required: 'Password is required',
-                minLength: {
-                  value: 6,
-                  message: 'Password must be at least 6 characters',
-                },
-              })}
-              error={errors.password?.message}
-            />
+        <form onSubmit={handleSubmit(handleLogin)} className="space-y-3">
+          <DarkInput
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            leftIcon={<FiMail size={18} />}
+            error={errors.email?.message as string}
+            {...(register('email', {
+              required: 'Email is required',
+              pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Invalid email' },
+            }) as any)}
+          />
+          <DarkInput
+            label="Password"
+            type="password"
+            placeholder="Your password"
+            leftIcon={<FiLock size={18} />}
+            error={errors.password?.message as string}
+            {...(register('password', {
+              required: 'Password is required',
+              minLength: { value: 6, message: 'Min 6 characters' },
+            }) as any)}
+          />
 
-            <Button type="submit" fullWidth loading={loading}>
-              Sign In
-            </Button>
-
-            {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
-            
-            <p className="text-center text-sm text-[var(--text-surface-secondary)]">
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={() => router.push('/auth/register')}
-                className="text-teal-600 dark:text-teal-400 font-semibold"
-              >
-                Register
-              </button>
+          {error && (
+            <p className="text-xs text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-xl px-3 py-2">
+              {error}
             </p>
-          </form>
-        </Card>
+          )}
+
+          <div className="pt-2">
+            <GradientButton type="submit" fullWidth size="lg" loading={loading}>
+              Sign in
+            </GradientButton>
+          </div>
+
+          <p className="text-center text-sm text-neutral-500 pt-2">
+            Don't have an account?{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/auth/register')}
+              className="text-[#34C0CA] font-semibold"
+            >
+              Register
+            </button>
+          </p>
+        </form>
       </div>
     </div>
   );

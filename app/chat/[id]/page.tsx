@@ -1,61 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FiSend, FiArrowLeft } from 'react-icons/fi';
-import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useEffect, useRef } from 'react';
 
 export default function ChatPage() {
   const router = useRouter();
   const params = useParams();
-  const { user } = useAuthStore(); // Get current user from store
+  const { user } = useAuthStore();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([]); // Initialize with empty array
+  const [messages, setMessages] = useState<any[]>([]);
   const [booking, setBooking] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
   useEffect(() => {
     const fetchChatData = async () => {
       if (!user?.id || !params.id) return;
-
-      // 1. Fetch booking to get the other participant (user_id)
-      const { data: bookingData, error: bookingError } = await supabase
+      const { data: bookingData } = await supabase
         .from('bookings')
         .select('*')
         .eq('id', params.id)
         .single();
-
-      if (bookingError) {
-        console.error('Error fetching booking:', bookingError);
-        return;
-      }
       setBooking(bookingData);
-
-      // 2. Fetch existing messages for this booking
-      const { data: msgs, error: msgsError } = await supabase
+      const { data: msgs } = await supabase
         .from('messages')
         .select('*')
         .eq('booking_id', params.id)
         .order('created_at', { ascending: true });
-
-      if (msgsError) {
-        console.error('Error fetching messages:', msgsError);
-      } else {
-        setMessages(msgs || []);
-      }
+      setMessages(msgs || []);
     };
-
     fetchChatData();
 
-    // Subscribe to new messages for this specific booking
     const channel = supabase
       .channel(`chat:${params.id}`)
       .on(
@@ -67,12 +47,8 @@ export default function ChatPage() {
           filter: `booking_id=eq.${params.id}`,
         },
         (payload: any) => {
-          setMessages((prev) => {
-            // Avoid duplicate messages if the sender already added it locally
-            if (prev.find(m => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
-          });
-        }
+          setMessages(prev => (prev.find(m => m.id === payload.new.id) ? prev : [...prev, payload.new]));
+        },
       )
       .subscribe();
 
@@ -86,86 +62,84 @@ export default function ChatPage() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (message.trim() && user?.id && params.id) {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert([
-          {
-            booking_id: params.id,
-            sender_id: user.id,
-            text: message.trim(),
-          },
-        ])
-        .select();
-
-      if (error) {
-        console.error('Error sending message:', error);
-      } else if (data && data.length > 0) {
-        setMessages((prev) => [...prev, data[0]]);
-        setMessage('');
-      }
+    if (!message.trim() || !user?.id || !params.id) return;
+    const { data } = await supabase
+      .from('messages')
+      .insert([{ booking_id: params.id, sender_id: user.id, text: message.trim() }])
+      .select();
+    if (data && data.length > 0) {
+      setMessages(prev => [...prev, data[0]]);
+      setMessage('');
     }
   };
 
   return (
     <MobileContainer>
       <div className="flex flex-col h-[calc(100vh-140px)]">
-        {/* Chat Header */}
-        <div className="sticky top-0 z-10 gradient-primary text-white px-4 py-3 flex items-center gap-3">
-          <button onClick={() => router.back()}>
-            <FiArrowLeft size={24} />
+        {/* Top bar */}
+        <div className="sticky top-0 z-10 bg-white border-b border-neutral-100 px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 rounded-full bg-[#13191C] text-white flex items-center justify-center active:scale-95"
+          >
+            <FiArrowLeft size={18} />
           </button>
-          <div>
-            <h1 className="font-semibold">{booking?.user?.name || 'User Chat'}</h1>
-            <p className="text-xs text-white/80">Vehicle: {booking?.vehicle_number || 'N/A'}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-[#0F1415] truncate">
+              {booking?.user?.name || 'Customer'}
+            </h1>
+            <p className="text-[11px] text-neutral-500">
+              Vehicle {booking?.vehicle_number || 'N/A'}
+            </p>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2 ${msg.sender_id === user?.id
-                  ? 'gradient-primary text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 !text-gray-900 dark:!text-gray-100'
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          {messages.map(msg => {
+            const mine = msg.sender_id === user?.id;
+            return (
+              <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`max-w-[78%] rounded-2xl px-4 py-2.5 ${
+                    mine
+                      ? 'bg-gradient-to-r from-[#34C0CA] to-[#66BD59] text-white rounded-br-md'
+                      : 'bg-[#13191C] text-white rounded-bl-md'
                   }`}
-              >
-                <p className="text-sm">{msg.text}</p>
-                <p className={`text-xs mt-1 ${msg.sender_id === user?.id ? 'text-white/70' : 'text-gray-500'
-                  }`}>
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
+                >
+                  <p className="text-sm">{msg.text}</p>
+                  <p className={`text-[10px] mt-0.5 ${mine ? 'text-white/75' : 'text-white/50'}`}>
+                    {new Date(msg.created_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 !text-gray-900 dark:!text-gray-100 focus:outline-none focus:border-teal-500"
-            />
-            <button
-              onClick={handleSend}
-              className="p-3 gradient-primary text-white rounded-xl"
-            >
-              <FiSend size={20} />
-            </button>
-          </div>
+        <div className="border-t border-neutral-100 px-3 py-2.5 bg-white flex items-center gap-2">
+          <input
+            type="text"
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            onKeyPress={e => e.key === 'Enter' && handleSend()}
+            placeholder="Message…"
+            className="flex-1 px-4 py-3 bg-neutral-100 rounded-full text-sm text-[#0F1415] placeholder-neutral-400 outline-none"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!message.trim()}
+            className="w-11 h-11 rounded-full bg-gradient-to-br from-[#34C0CA] to-[#66BD59] text-white flex items-center justify-center active:scale-95 disabled:opacity-50 shadow-md"
+          >
+            <FiSend size={18} />
+          </button>
         </div>
       </div>
     </MobileContainer>
   );
 }
-

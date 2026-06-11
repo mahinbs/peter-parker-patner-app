@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiPhone, FiMail, FiMapPin, FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
-import Card from '../components/Card';
-import Button from '../components/Button';
+import {
+  FiUser,
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiCheckCircle,
+  FiXCircle,
+  FiClock,
+  FiLogOut,
+  FiSettings,
+  FiHelpCircle,
+  FiChevronRight,
+} from 'react-icons/fi';
 import MobileContainer from '../components/MobileContainer';
+import { DarkCard, GradientButton, SectionLabel } from '../components/ui';
 import { useAuthStore } from '../store/useAuthStore';
 
 export default function ProfilePage() {
@@ -16,161 +27,160 @@ export default function ProfilePage() {
     fetchProfile();
   }, [fetchProfile]);
 
-  const kycStatusConfig = {
+  const kycConfig = {
     pending: {
       icon: FiClock,
-      color: 'text-yellow-500',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-      text: 'Pending Verification',
+      label: 'Pending verification',
+      color: '#FFB627',
+      desc: 'Your documents are under review',
     },
     approved: {
       icon: FiCheckCircle,
-      color: 'text-green-500',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      text: 'Verified',
+      label: 'Verified',
+      color: '#66BD59',
+      desc: 'You can accept parking requests',
     },
     rejected: {
       icon: FiXCircle,
-      color: 'text-red-500',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      text: 'Rejected',
+      label: 'Rejected',
+      color: '#EF4444',
+      desc: 'Please resubmit your documents',
     },
   };
+  const kyc = user?.kycStatus ? kycConfig[user.kycStatus] : kycConfig.pending;
+  const KycIcon = kyc.icon;
 
-  const statusConfig = user?.kycStatus ? kycStatusConfig[user.kycStatus] : kycStatusConfig.pending;
-  const StatusIcon = statusConfig.icon;
+  const initials = user?.name?.charAt(0).toUpperCase() || 'V';
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
-          Profile
-        </h1>
-
-        {/* Profile Header */}
-        <Card>
-          <div className="text-center py-6">
-            <div className="w-24 h-24 rounded-full gradient-primary mx-auto mb-4 flex items-center justify-center">
-              <span className="text-3xl font-bold text-white">
-                {user?.name?.charAt(0).toUpperCase() || 'V'}
-              </span>
-            </div>
-            <h2 className="text-xl font-bold !text-gray-900 dark:!text-gray-100 mb-1">
-              {user?.name || 'Valet Partner'}
-            </h2>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 text-sm">
-              <StatusIcon className={statusConfig.color} size={16} />
-              {statusConfig.text}
-            </div>
-          </div>
-        </Card>
-
-        {/* Personal Information */}
-        <Card>
-          <h3 className="font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-            Personal Information
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <FiUser className="text-gray-400" size={20} />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
-                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
-                  {user?.name || 'Not set'}
-                </p>
+      <div className="p-4 space-y-4 pb-8">
+        {/* Profile hero */}
+        <DarkCard glow noPadding>
+          <div className="relative p-5">
+            <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-[#34C0CA]/25 to-[#66BD59]/25 rounded-full blur-3xl" />
+            <div className="relative flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                {initials}
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <FiPhone className="text-gray-400" size={20} />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Phone Number</p>
-                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
-                  {user?.phone || 'Not set'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <FiMail className="text-gray-400" size={20} />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
-                  {user?.email || 'Not set'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <FiMapPin className="text-gray-400" size={20} />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 dark:text-gray-400">City & Area</p>
-                <p className="text-sm font-medium !text-gray-900 dark:!text-gray-100">
-                  {user?.city || 'Not set'}
-                </p>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold leading-tight truncate">
+                  {user?.name || 'Valet partner'}
+                </h2>
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold mt-1.5"
+                  style={{ backgroundColor: `${kyc.color}26`, color: kyc.color }}
+                >
+                  <KycIcon size={12} />
+                  {kyc.label}
+                </span>
               </div>
             </div>
           </div>
-        </Card>
+        </DarkCard>
 
-        {/* KYC Status */}
-        <Card>
-          <h3 className="font-semibold !text-gray-900 dark:!text-gray-100 mb-4">
-            KYC Status
-          </h3>
-          <div className={`p-4 rounded-xl ${statusConfig.bgColor}`}>
+        {/* Personal info */}
+        <div>
+          <SectionLabel>Personal information</SectionLabel>
+          <DarkCard>
+            <div className="space-y-3">
+              {[
+                { icon: FiUser, label: 'Full name', value: user?.name },
+                { icon: FiPhone, label: 'Phone', value: user?.phone },
+                { icon: FiMail, label: 'Email', value: user?.email },
+                { icon: FiMapPin, label: 'City', value: user?.city },
+              ].map((row, i, arr) => {
+                const Icon = row.icon;
+                return (
+                  <div
+                    key={row.label}
+                    className={`flex items-center gap-3 ${i < arr.length - 1 ? 'pb-3 border-b border-white/5' : ''}`}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-[#34C0CA]/15 text-[#34C0CA] flex items-center justify-center shrink-0">
+                      <Icon size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                        {row.label}
+                      </p>
+                      <p className="text-sm font-semibold truncate">{row.value || 'Not set'}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </DarkCard>
+        </div>
+
+        {/* KYC */}
+        <div>
+          <SectionLabel>KYC status</SectionLabel>
+          <DarkCard>
             <div className="flex items-center gap-3">
-              <StatusIcon className={statusConfig.color} size={24} />
-              <div>
-                <p className="font-medium !text-gray-900 dark:!text-gray-100">
-                  {statusConfig.text}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {user?.kycStatus === 'pending' && 'Your documents are under review'}
-                  {user?.kycStatus === 'approved' && 'You can accept parking requests'}
-                  {user?.kycStatus === 'rejected' && 'Please resubmit your documents'}
-                </p>
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${kyc.color}26`, color: kyc.color }}
+              >
+                <KycIcon size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold">{kyc.label}</p>
+                <p className="text-[11px] text-white/55">{kyc.desc}</p>
               </div>
             </div>
-          </div>
-          {user?.kycStatus !== 'approved' && (
-            <Button
-              onClick={() => router.push('/kyc/identity')}
-              variant="outline"
-              fullWidth
-              className="mt-4"
-            >
-              {user?.kycStatus === 'rejected' ? 'Resubmit Documents' : 'Complete KYC'}
-            </Button>
-          )}
-        </Card>
+            {user?.kycStatus !== 'approved' && (
+              <div className="mt-3 flex justify-end">
+                <GradientButton
+                  size="sm"
+                  withArrow={false}
+                  onClick={() => router.push('/kyc/identity')}
+                >
+                  {user?.kycStatus === 'rejected' ? 'Resubmit' : 'Complete KYC'}
+                </GradientButton>
+              </div>
+            )}
+          </DarkCard>
+        </div>
 
         {/* Actions */}
-        <div className="space-y-2">
-          <Button
-            onClick={() => router.push('/settings')}
-            variant="outline"
-            fullWidth
-          >
-            Settings
-          </Button>
-          <Button
-            onClick={() => router.push('/support')}
-            variant="outline"
-            fullWidth
-          >
-            Support & Help
-          </Button>
-          <Button
-            onClick={async () => {
-              await logout();
-              router.push('/auth/login');
-            }}
-            variant="danger"
-            fullWidth
-          >
-            Logout
-          </Button>
+        <div>
+          <SectionLabel>Account</SectionLabel>
+          <DarkCard className="!p-2">
+            <div className="divide-y divide-white/5">
+              <button
+                onClick={() => router.push('/settings')}
+                className="w-full flex items-center gap-3 px-2 py-3 text-left"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#34C0CA]/15 text-[#34C0CA] flex items-center justify-center shrink-0">
+                  <FiSettings size={18} />
+                </div>
+                <p className="flex-1 text-sm font-semibold">Settings</p>
+                <FiChevronRight className="text-white/40" />
+              </button>
+              <button
+                onClick={() => router.push('/support')}
+                className="w-full flex items-center gap-3 px-2 py-3 text-left"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#66BD59]/15 text-[#66BD59] flex items-center justify-center shrink-0">
+                  <FiHelpCircle size={18} />
+                </div>
+                <p className="flex-1 text-sm font-semibold">Support & help</p>
+                <FiChevronRight className="text-white/40" />
+              </button>
+            </div>
+          </DarkCard>
         </div>
+
+        <button
+          onClick={async () => {
+            await logout();
+            router.push('/auth/login');
+          }}
+          className="w-full py-3.5 rounded-2xl bg-[#EF4444]/10 border border-[#EF4444]/25 text-[#EF4444] font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition"
+        >
+          <FiLogOut size={18} /> Log out
+        </button>
       </div>
     </MobileContainer>
   );
 }
-

@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiUpload, FiCamera, FiX, FiCheck } from 'react-icons/fi';
-import Button from '../../components/Button';
-import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { DarkCard, GradientButton } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 
 export default function KYCIdentityPage() {
@@ -20,10 +19,7 @@ export default function KYCIdentityPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileSelect = (
-    type: 'front' | 'back' | 'selfie',
-    file: File
-  ) => {
+  const handleFileSelect = (type: 'front' | 'back' | 'selfie', file: File) => {
     const preview = URL.createObjectURL(file);
     if (type === 'front') {
       setIdFrontFile(file);
@@ -40,17 +36,11 @@ export default function KYCIdentityPage() {
   const uploadToStorage = async (file: File, path: string): Promise<string> => {
     const { error: uploadError } = await supabase.storage
       .from('kyc-documents')
-      .upload(path, file, {
-        upsert: true,
-        contentType: file.type,
-      });
-
+      .upload(path, file, { upsert: true, contentType: file.type });
     if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('kyc-documents')
-      .getPublicUrl(path);
-
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('kyc-documents').getPublicUrl(path);
     return publicUrl;
   };
 
@@ -59,21 +49,19 @@ export default function KYCIdentityPage() {
       setError('Please upload all required images.');
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found. Please log in again.');
-
       const [frontUrl, backUrl, selfieUrl] = await Promise.all([
         uploadToStorage(idFrontFile, `${user.id}/id_front.${idFrontFile.name.split('.').pop()}`),
         uploadToStorage(idBackFile, `${user.id}/id_back.${idBackFile.name.split('.').pop()}`),
         uploadToStorage(selfieFile, `${user.id}/selfie.${selfieFile.name.split('.').pop()}`),
       ]);
-
-      const { error: updateError } = await supabase
+      await supabase
         .from('profiles')
         .update({
           id_type: idType,
@@ -83,13 +71,9 @@ export default function KYCIdentityPage() {
           kyc_status: 'pending',
         })
         .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
       router.push('/kyc/qualification');
     } catch (err: any) {
-      setError(err.message || 'Failed to upload documents. Please try again.');
-      console.error('KYC identity upload error:', err);
+      setError(err.message || 'Failed to upload documents.');
     } finally {
       setLoading(false);
     }
@@ -110,32 +94,32 @@ export default function KYCIdentityPage() {
     capture?: 'user' | 'environment';
     icon: typeof FiUpload;
   }) => (
-    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
+    <div>
       {preview ? (
-        <div className="relative">
-          <img src={preview} alt={label} className="w-full h-48 object-contain rounded-lg" />
+        <div className="relative rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-50">
+          <img src={preview} alt={label} className="w-full h-44 object-cover" />
           <button
             onClick={onClear}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 shadow"
+            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/70 flex items-center justify-center"
           >
-            <FiX size={16} />
+            <FiX className="text-white" size={16} />
           </button>
-          <div className="flex items-center justify-center gap-1 mt-2 text-emerald-600 text-sm font-medium">
-            <FiCheck size={14} /> Uploaded
+          <div className="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-[#66BD59]/20 text-[#66BD59] text-[10px] font-bold flex items-center gap-1">
+            <FiCheck size={10} /> Uploaded
           </div>
         </div>
       ) : (
-        <label className="cursor-pointer flex flex-col items-center gap-2">
+        <label className="cursor-pointer flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 active:bg-neutral-100 transition">
           <input
             type="file"
             accept="image/*"
             capture={capture}
             className="hidden"
-            onChange={(e) => e.target.files?.[0] && onSelect(e.target.files[0])}
+            onChange={e => e.target.files?.[0] && onSelect(e.target.files[0])}
           />
-          <Icon size={32} className="text-gray-400" />
-          <p className="text-sm text-gray-600 dark:text-gray-400">Tap to upload</p>
-          <p className="text-xs text-gray-400">{label}</p>
+          <Icon size={28} className="text-neutral-400" />
+          <p className="text-xs text-neutral-500 font-semibold">Tap to upload</p>
+          <p className="text-[10px] text-neutral-400">{label}</p>
         </label>
       )}
     </div>
@@ -143,95 +127,93 @@ export default function KYCIdentityPage() {
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-5 pb-12">
         <div>
-          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
-            Identity Verification
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Please upload your government-issued ID for verification
-          </p>
+          <p className="text-xs text-neutral-500">KYC · Step 1 of 2</p>
+          <h1 className="text-2xl font-extrabold text-[#0F1415] tracking-tight">Identity verification</h1>
+          <p className="text-sm text-neutral-500 mt-1">Upload your government-issued ID to verify</p>
         </div>
 
-        <Card>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ID Type
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['aadhaar', 'pan', 'license'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setIdType(type)}
-                    className={`p-3 rounded-xl border-2 transition-colors ${idType === type
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                      : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                  >
-                    <span className="text-sm font-medium capitalize">{type}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ID Front Side
-              </label>
-              <UploadBox
-                preview={idFrontPreview}
-                label="Front of your ID"
-                icon={FiUpload}
-                onClear={() => { setIdFrontFile(null); setIdFrontPreview(null); }}
-                onSelect={(f) => handleFileSelect('front', f)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ID Back Side
-              </label>
-              <UploadBox
-                preview={idBackPreview}
-                label="Back of your ID"
-                icon={FiUpload}
-                onClear={() => { setIdBackFile(null); setIdBackPreview(null); }}
-                onSelect={(f) => handleFileSelect('back', f)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Selfie with ID
-              </label>
-              <UploadBox
-                preview={selfiePreview}
-                label="Take a selfie holding your ID"
-                icon={FiCamera}
-                capture="user"
-                onClear={() => { setSelfieFile(null); setSelfiePreview(null); }}
-                onSelect={(f) => handleFileSelect('selfie', f)}
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
-                <FiX />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <Button
-              onClick={handleSubmit}
-              fullWidth
-              loading={loading}
-              disabled={!idFrontFile || !idBackFile || !selfieFile}
-            >
-              {loading ? 'Uploading Documents...' : 'Continue'}
-            </Button>
+        <div>
+          <label className="block text-sm font-semibold text-[#0F1415] mb-2">ID type</label>
+          <div className="grid grid-cols-3 gap-2">
+            {(['aadhaar', 'pan', 'license'] as const).map(type => {
+              const active = idType === type;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setIdType(type)}
+                  className={`py-3 rounded-2xl text-sm font-semibold border capitalize transition ${
+                    active
+                      ? 'bg-gradient-to-r from-[#34C0CA] to-[#66BD59] text-white border-transparent'
+                      : 'bg-neutral-50 text-[#0F1415] border-neutral-200'
+                  }`}
+                >
+                  {type}
+                </button>
+              );
+            })}
           </div>
-        </Card>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-[#0F1415] mb-2">ID front</label>
+          <UploadBox
+            preview={idFrontPreview}
+            label="Front of your ID"
+            icon={FiUpload}
+            onClear={() => {
+              setIdFrontFile(null);
+              setIdFrontPreview(null);
+            }}
+            onSelect={f => handleFileSelect('front', f)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-[#0F1415] mb-2">ID back</label>
+          <UploadBox
+            preview={idBackPreview}
+            label="Back of your ID"
+            icon={FiUpload}
+            onClear={() => {
+              setIdBackFile(null);
+              setIdBackPreview(null);
+            }}
+            onSelect={f => handleFileSelect('back', f)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-[#0F1415] mb-2">Selfie with ID</label>
+          <UploadBox
+            preview={selfiePreview}
+            label="Take a selfie holding your ID"
+            icon={FiCamera}
+            capture="user"
+            onClear={() => {
+              setSelfieFile(null);
+              setSelfiePreview(null);
+            }}
+            onSelect={f => handleFileSelect('selfie', f)}
+          />
+        </div>
+
+        {error && (
+          <p className="text-xs text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-xl px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <GradientButton
+          fullWidth
+          size="lg"
+          loading={loading}
+          disabled={!idFrontFile || !idBackFile || !selfieFile}
+          onClick={handleSubmit}
+        >
+          Continue
+        </GradientButton>
       </div>
     </MobileContainer>
   );

@@ -2,20 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiPower,
   FiDollarSign,
   FiMapPin,
   FiClock,
   FiAlertCircle,
   FiCheckCircle,
-  FiNavigation,
-  FiChevronDown
+  FiChevronDown,
 } from 'react-icons/fi';
-import Card from '../components/Card';
-import Button from '../components/Button';
+import { HiArrowRight } from 'react-icons/hi';
 import MobileContainer from '../components/MobileContainer';
+import { DarkCard, GradientButton, SectionLabel } from '../components/ui';
 import { useAuthStore, PartnerStatus } from '../store/useAuthStore';
 import { supabase } from '../lib/supabase';
 
@@ -32,42 +29,46 @@ export default function DashboardPage() {
     availableSlots: 0,
     pendingRequests: 0,
   });
-
   const [activeRequests, setActiveRequests] = useState<any[]>([]);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
 
   const fetchStats = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    if (!u) return;
 
-    // Fetch Earnings Today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const { data: earnings } = await supabase
       .from('bookings')
       .select('cost')
-      .eq('partner_id', user.id)
+      .eq('partner_id', u.id)
       .eq('status', 'completed')
       .gte('ended_at', today.toISOString());
 
-    const totalEarnings = earnings?.reduce((acc: number, curr: any) => acc + (Number(curr.cost) || 0), 0) || 0;
+    const totalEarnings = earnings?.reduce((acc: number, c: any) => acc + (Number(c.cost) || 0), 0) || 0;
 
-    // Fetch Active Sessions
     const { count: sessionsCount } = await supabase
       .from('bookings')
       .select('*', { count: 'exact', head: true })
-      .eq('partner_id', user.id)
-      .in('status', ['accepted', 'valet_enroute_pickup', 'valet_arrived_pickup', 'valet_enroute_drop', 'parked', 'valet_enroute_return']);
+      .eq('partner_id', u.id)
+      .in('status', [
+        'accepted',
+        'valet_enroute_pickup',
+        'valet_arrived_pickup',
+        'valet_enroute_drop',
+        'parked',
+        'valet_enroute_return',
+      ]);
 
-    // Fetch Available Slots (from first managed location for simplicity)
     const { data: location } = await supabase
       .from('parking_locations')
       .select('available_slots')
-      .eq('partner_id', user.id)
+      .eq('partner_id', u.id)
       .limit(1)
       .single();
 
-    // Fetch Pending Requests
     const { count: requestsCount } = await supabase
       .from('bookings')
       .select('*', { count: 'exact', head: true })
@@ -87,74 +88,78 @@ export default function DashboardPage() {
       .select('*')
       .eq('status', 'searching')
       .order('created_at', { ascending: false });
-
     if (requests) {
-      setActiveRequests(requests.map((r: any) => ({
-        id: r.id,
-        vehicleType: r.vehicle_type || 'Unknown Vehicle',
-        userLocation: r.pickup_location || 'Unknown Location',
-        estimatedEarnings: r.cost || 0,
-        distance: r.distance || '0 km',
-        duration: r.duration || 'N/A',
-        timeLeft: 60, // Mock timer for now
-      })));
+      setActiveRequests(
+        requests.map((r: any) => ({
+          id: r.id,
+          vehicleType: r.vehicle_type || 'Vehicle',
+          userLocation: r.pickup_location || 'Unknown location',
+          estimatedEarnings: r.cost || 0,
+          distance: r.distance || '0 km',
+          duration: r.duration || 'N/A',
+          timeLeft: 60,
+        })),
+      );
     }
   };
 
   const fetchActiveSessions = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    if (!u) return;
     const { data: sessions } = await supabase
       .from('bookings')
       .select('*')
-      .eq('partner_id', user.id)
-      .in('status', ['accepted', 'valet_enroute_pickup', 'valet_arrived_pickup', 'valet_enroute_drop', 'parked', 'valet_enroute_return'])
+      .eq('partner_id', u.id)
+      .in('status', [
+        'accepted',
+        'valet_enroute_pickup',
+        'valet_arrived_pickup',
+        'valet_enroute_drop',
+        'parked',
+        'valet_enroute_return',
+      ])
       .order('created_at', { ascending: false });
 
     if (sessions) {
-      setActiveSessions(sessions.map((s: any) => {
-        let remainingTime = 'N/A';
-        if (s.status === 'parked' && s.parked_at) {
-          const parkedTime = new Date(s.parked_at).getTime();
-          const now = new Date().getTime();
-          const diffInSeconds = Math.floor((now - parkedTime) / 1000);
-          const baseTime = 30 * 60;
-          const remaining = Math.max(0, baseTime - diffInSeconds);
-          const mins = Math.floor(remaining / 60);
-          const secs = remaining % 60;
-          remainingTime = `${mins}:${secs.toString().padStart(2, '0')}`;
-        } else if (s.status.includes('enroute')) {
-          remainingTime = 'Enroute';
-        } else if (s.status === 'accepted') {
-          remainingTime = 'Accepted';
-        }
-
-        return {
-          id: s.id,
-          status: s.status,
-          vehicleNumber: s.vehicle_number || 'N/A',
-          slotNumber: s.parking_location || 'TBD',
-          startTime: s.started_at ? new Date(s.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
-          remainingTime,
-        };
-      }));
+      setActiveSessions(
+        sessions.map((s: any) => {
+          let remainingTime = 'N/A';
+          if (s.status === 'parked' && s.parked_at) {
+            const parkedTime = new Date(s.parked_at).getTime();
+            const diffInSeconds = Math.floor((Date.now() - parkedTime) / 1000);
+            const remaining = Math.max(0, 30 * 60 - diffInSeconds);
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            remainingTime = `${mins}:${secs.toString().padStart(2, '0')}`;
+          } else if (s.status.includes('enroute')) remainingTime = 'En route';
+          else if (s.status === 'accepted') remainingTime = 'Accepted';
+          return {
+            id: s.id,
+            status: s.status,
+            vehicleNumber: s.vehicle_number || 'N/A',
+            slotNumber: s.parking_location || 'TBD',
+            startTime: s.started_at
+              ? new Date(s.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'N/A',
+            remainingTime,
+          };
+        }),
+      );
     }
   };
 
   useEffect(() => {
-    // KYC Check
     if (user && user.kycStatus !== 'approved') {
       router.push('/kyc/status');
       return;
     }
-
     fetchStats();
     fetchActiveRequests();
     fetchActiveSessions();
 
-    // Real-time subscriptions
-    const bookingSubscription = supabase
+    const sub = supabase
       .channel('bookings-changes')
       .on('postgres_changes' as any, { event: '*', table: 'bookings' }, () => {
         fetchStats();
@@ -162,462 +167,286 @@ export default function DashboardPage() {
         fetchActiveSessions();
       })
       .subscribe();
-
     return () => {
-      supabase.removeChannel(bookingSubscription);
+      supabase.removeChannel(sub);
     };
   }, [user, router]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    if (isStatusDropdownOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isStatusDropdownOpen]);
+
   const currentStatus: PartnerStatus = user?.status ?? 'offline';
-  const city = user?.city ?? 'Not Set';
-  const zone = user?.zone ?? 'Not Set';
+  const city = user?.city ?? 'Not set';
+  const zone = user?.zone ?? 'Not set';
 
-  const statusOptions: { value: PartnerStatus; label: string; color: string; bgColor: string }[] = [
-    { value: 'online', label: 'Online', color: 'text-green-600', bgColor: 'bg-green-50 dark:bg-green-900/20' },
-    { value: 'ontrip', label: 'On Trip', color: 'text-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
-    { value: 'offline', label: 'Offline', color: 'text-gray-600', bgColor: 'bg-gray-50 dark:bg-gray-900/20' },
-  ];
-
-  const currentStatusConfig = statusOptions.find(opt => opt.value === currentStatus) || statusOptions[2];
+  const statusConfig: Record<PartnerStatus, { label: string; dot: string; pill: string }> = {
+    online: {
+      label: 'Online',
+      dot: 'bg-[#66BD59] shadow-[0_0_8px_rgba(102,189,89,0.6)]',
+      pill: 'bg-[#66BD59]/15 text-[#66BD59] border-[#66BD59]/30',
+    },
+    ontrip: {
+      label: 'On trip',
+      dot: 'bg-[#34C0CA] shadow-[0_0_8px_rgba(52,192,202,0.6)]',
+      pill: 'bg-[#34C0CA]/15 text-[#34C0CA] border-[#34C0CA]/30',
+    },
+    offline: {
+      label: 'Offline',
+      dot: 'bg-white/40',
+      pill: 'bg-white/10 text-white/70 border-white/15',
+    },
+  };
+  const current = statusConfig[currentStatus];
 
   const handleStatusChange = async (status: PartnerStatus) => {
     if (status === currentStatus) {
       setIsStatusDropdownOpen(false);
       return;
     }
-
     setIsStatusUpdating(true);
     setIsStatusDropdownOpen(false);
-
-    const result = await (setStatus as any)(status);
-
-    if (result?.error) {
-      alert('Failed to update status: ' + result.error);
-    }
-    
+    await (setStatus as any)(status);
     setIsStatusUpdating(false);
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsStatusDropdownOpen(false);
-      }
-    };
-
-    if (isStatusDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isStatusDropdownOpen]);
-
   return (
     <MobileContainer>
-      {/* Background Image with fade to transparent */}
-      <div className="absolute top-0 left-0 w-full h-[45vh] pointer-events-none -z-10">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80')" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[var(--color-background)]/80 to-[var(--color-background)]" />
-      </div>
-
-      <div className="p-4 space-y-4 pt-8">
-        {/* Status Dropdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="hover-lift">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+      <div className="p-4 space-y-4 pb-8">
+        {/* Status hero */}
+        <DarkCard glow noPadding>
+          <div className="relative p-5">
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-[#34C0CA]/30 to-[#66BD59]/30 rounded-full blur-3xl" />
+            <div className="relative">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm text-[var(--text-surface-secondary)] mb-1">Status</p>
-                  <motion.p
-                    key={currentStatus}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`text-lg font-bold ${currentStatus === 'online' ? 'text-green-400' : currentStatus === 'ontrip' ? 'text-blue-400' : 'text-gray-400'}`}
-                  >
-                    {currentStatusConfig.label}
-                  </motion.p>
+                  <p className="text-xs text-white/55 uppercase tracking-wider">Status</p>
+                  <p className="text-2xl font-extrabold mt-1">{current.label}</p>
                 </div>
                 <div className="relative" ref={dropdownRef}>
-                  <motion.button
+                  <button
                     onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                     disabled={isStatusUpdating}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all duration-300 ${isStatusUpdating ? 'opacity-50 cursor-not-allowed' : ''} ${currentStatus === 'online'
-                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                      : currentStatus === 'ontrip'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
-                      }`}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full border ${current.pill} font-semibold text-xs transition active:scale-95 ${
+                      isStatusUpdating ? 'opacity-60' : ''
+                    }`}
                   >
-                    {isStatusUpdating ? (
-                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
-                    ) : (
-                      <motion.div
-                        animate={{
-                          scale: currentStatus === 'online' || currentStatus === 'ontrip' ? [1, 1.2, 1] : 1
-                        }}
-                        transition={{ duration: 2, repeat: currentStatus === 'online' || currentStatus === 'ontrip' ? Infinity : 0 }}
-                        className={`h-2 w-2 rounded-full ${currentStatus === 'online'
-                          ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
-                          : currentStatus === 'ontrip'
-                            ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
-                            : 'bg-gray-400'
-                          }`}
-                      />
-                    )}
-                    <span className={`text-sm font-semibold ${currentStatusConfig.color}`}>
-                      {isStatusUpdating ? 'Updating...' : currentStatusConfig.label}
-                    </span>
-                    <FiChevronDown
-                      className={`transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''} ${currentStatusConfig.color}`}
-                      size={16}
-                    />
-                  </motion.button>
-
-                  <AnimatePresence>
-                    {isStatusDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
-                      >
-                        {statusOptions.map((option) => (
+                    <span className={`h-2 w-2 rounded-full ${current.dot}`} />
+                    <span>{isStatusUpdating ? 'Updating…' : current.label}</span>
+                    <FiChevronDown size={14} className={`transition ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isStatusDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white text-[#0F1415] rounded-2xl shadow-2xl border border-neutral-100 z-50 overflow-hidden">
+                      {(Object.keys(statusConfig) as PartnerStatus[]).map(opt => {
+                        const c = statusConfig[opt];
+                        return (
                           <button
-                            key={option.value}
-                            onClick={() => handleStatusChange(option.value)}
-                            className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${currentStatus === option.value
-                              ? `${option.bgColor} ${option.color} font-semibold`
-                              : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                              }`}
+                            key={opt}
+                            onClick={() => handleStatusChange(opt)}
+                            className={`w-full text-left px-3 py-2.5 flex items-center gap-2 text-sm ${
+                              currentStatus === opt ? 'bg-neutral-50 font-semibold' : ''
+                            }`}
                           >
-                            <div
-                              className={`h-2 w-2 rounded-full ${option.value === 'online'
-                                ? 'bg-green-500'
-                                : option.value === 'ontrip'
-                                  ? 'bg-blue-500'
-                                  : 'bg-gray-400'
-                                }`}
-                            />
-                            <span>{option.label}</span>
-                            {currentStatus === option.value && (
-                              <FiCheckCircle className="ml-auto" size={18} />
+                            <span className={`h-2 w-2 rounded-full ${c.dot}`} />
+                            <span>{c.label}</span>
+                            {currentStatus === opt && (
+                              <FiCheckCircle className="ml-auto text-[#66BD59]" size={16} />
                             )}
                           </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* City and Zone Display */}
-              <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-[var(--text-surface-secondary)] mb-1">Current Location</p>
-                    <p className="text-sm font-semibold text-[var(--text-surface)]">
-                      {city}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-[var(--text-surface-secondary)] mb-1">Zone</p>
-                    <p className="text-sm font-semibold text-[var(--text-surface)]">
-                      {zone}
-                    </p>
-                  </div>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white/5 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-white/55">City</p>
+                  <p className="text-sm font-semibold mt-0.5">{city}</p>
+                </div>
+                <div className="rounded-xl bg-white/5 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-white/55">Zone</p>
+                  <p className="text-sm font-semibold mt-0.5">{zone}</p>
                 </div>
               </div>
             </div>
-          </Card>
-        </motion.div>
+          </div>
+        </DarkCard>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {[
-            { icon: FiDollarSign, label: 'Earnings Today', value: `₹${stats.earningsToday}`, color: 'bg-[var(--color-secondary-accent-light)]', iconColor: 'text-[var(--color-secondary-accent)]' },
-            { icon: FiClock, label: 'Active Sessions', value: stats.activeSessions, color: 'bg-[var(--color-primary-accent-light)]', iconColor: 'text-[var(--color-primary-accent)]' },
-            { icon: FiMapPin, label: 'Available Slots', value: stats.availableSlots, color: 'bg-purple-100 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400' },
-            { icon: FiAlertCircle, label: 'Pending Requests', value: stats.pendingRequests, color: 'bg-orange-100 dark:bg-orange-900/20', iconColor: 'text-orange-600 dark:text-orange-400' },
-          ].map((stat, index) => {
+            { icon: FiDollarSign, label: 'Earnings today', value: `₹${stats.earningsToday}`, color: '#66BD59' },
+            { icon: FiClock, label: 'Active sessions', value: stats.activeSessions, color: '#34C0CA' },
+            { icon: FiMapPin, label: 'Available slots', value: stats.availableSlots, color: '#66BD59' },
+            { icon: FiAlertCircle, label: 'Pending requests', value: stats.pendingRequests, color: '#FFB627' },
+          ].map(stat => {
             const Icon = stat.icon;
             return (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card className="hover-lift">
-                  <div className="flex items-center gap-3">
-                    <motion.div
-                      className={`p-3 rounded-xl ${stat.color}`}
-                      whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Icon className={stat.iconColor} size={24} />
-                    </motion.div>
-                    <div>
-                      <p className="text-xs text-[var(--text-secondary)]">{stat.label}</p>
-                      <motion.p
-                        className="text-lg font-bold text-[var(--text-primary)]"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.1 + 0.2 }}
-                      >
-                        {stat.value}
-                      </motion.p>
-                    </div>
+              <DarkCard key={stat.label} className="!p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${stat.color}26`, color: stat.color }}
+                  >
+                    <Icon size={16} />
                   </div>
-                </Card>
-              </motion.div>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                    {stat.label}
+                  </p>
+                </div>
+                <p className="text-xl font-extrabold">{stat.value}</p>
+              </DarkCard>
             );
           })}
         </div>
 
         {/* Active Requests */}
         {activeRequests.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <h2 className="text-lg font-bold text-[var(--text-primary)] mb-3">
-              Active Requests
-            </h2>
+          <div>
+            <SectionLabel>Active requests</SectionLabel>
             <div className="space-y-3">
-              {activeRequests.map((request: any, index: number) => (
-                <motion.div
-                  key={request.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  whileHover={{ scale: 1.01 }}
-                >
-                  <Card className="hover-lift">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-semibold text-[var(--text-primary)]">
-                            {request.vehicleType}
-                          </p>
-                          <p className="text-sm text-[var(--text-secondary)]">
-                            {request.userLocation}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-[var(--color-primary-accent)]">
-                            ₹{request.estimatedEarnings}
-                          </p>
-                          <p className="text-xs text-[var(--text-tertiary)]">{request.distance} away</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                        <FiClock size={14} />
-                        <span>{request.duration}</span>
-                        <motion.span
-                          className="text-orange-500 ml-auto font-semibold"
-                          animate={{ opacity: [1, 0.5, 1] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        >
-                          {request.timeLeft}s left
-                        </motion.span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                        onClick={async () => {
-                          try {
-                            const { data: { user } } = await supabase.auth.getUser();
-                            if (!user) {
-                              alert('You must be logged in to accept requests');
-                              return;
-                            }
-
-                            const { error } = await supabase
-                              .from('bookings')
-                              .update({ 
-                                partner_id: user.id, 
-                                status: 'accepted', 
-                                started_at: new Date().toISOString() 
-                              })
-                              .eq('id', request.id)
-                              .eq('status', 'searching');
-
-                            if (error) {
-                              alert('Failed to accept request: ' + error.message);
-                              return;
-                            }
-                            
-                            // Also update partner status to 'ontrip' using the store
-                            await setStatus('ontrip');
-
-                            router.push(`/requests/${request.id}`);
-                          } catch (err: any) {
-                            alert('An unexpected error occurred: ' + err.message);
-                          }
-                        }}
-                          variant="primary"
-                          className="flex-1"
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setActiveRequests(prev => prev.filter(r => r.id !== request.id));
-                          }}
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          Reject
-                        </Button>
-                      </div>
+              {activeRequests.map(r => (
+                <DarkCard key={r.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate">{r.vehicleType}</p>
+                      <p className="text-[11px] text-white/55 mt-0.5 truncate">{r.userLocation}</p>
                     </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Active Parking Sessions */}
-        {activeSessions.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <h2 className="text-lg font-bold text-[var(--text-primary)] mb-3">
-              Active Sessions
-            </h2>
-            <div className="space-y-3">
-              {activeSessions.map((session: any, index: number) => (
-                <motion.div
-                  key={session.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    className={`hover-lift cursor-pointer border-2 transition-all ${
-                      session.status === 'valet_enroute_return' 
-                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/10' 
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <div 
-                      className="flex items-center justify-between"
-                      onClick={() => router.push(`/sessions/${session.id}`)}
+                    <div className="text-right shrink-0">
+                      <p className="text-base font-extrabold text-[#66BD59]">₹{r.estimatedEarnings}</p>
+                      <p className="text-[10px] text-white/55 mt-0.5">{r.distance} away</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-white/55 mt-2">
+                    <FiClock size={12} />
+                    <span>{r.duration}</span>
+                    <span className="ml-auto text-[#FFB627] font-semibold animate-pulse">
+                      {r.timeLeft}s left
+                    </span>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <GradientButton
+                      fullWidth
+                      withArrow={false}
+                      size="sm"
+                      onClick={async () => {
+                        const {
+                          data: { user: u },
+                        } = await supabase.auth.getUser();
+                        if (!u) return;
+                        await supabase
+                          .from('bookings')
+                          .update({
+                            partner_id: u.id,
+                            status: 'accepted',
+                            started_at: new Date().toISOString(),
+                          })
+                          .eq('id', r.id)
+                          .eq('status', 'searching');
+                        await setStatus('ontrip');
+                        router.push(`/requests/${r.id}`);
+                      }}
                     >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-[var(--text-primary)]">
-                            {session.vehicleNumber}
-                          </p>
-                          {session.status === 'valet_enroute_return' && (
-                            <span className="px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
-                              RETURN REQUESTED
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-[var(--text-secondary)]">
-                          Slot: {session.slotNumber}
-                        </p>
-                        <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                          Started: {session.startTime}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-semibold ${
-                          session.status === 'valet_enroute_return' ? 'text-orange-600' : 'text-[var(--color-primary-accent)]'
-                        }`}>
-                          {session.status === 'valet_enroute_return' ? 'USER WAITING' : session.remainingTime}
-                        </p>
-                        <p className="text-xs text-[var(--text-tertiary)]">
-                          {session.status === 'valet_enroute_return' ? 'at pickup point' : 'remaining'}
-                        </p>
-                      </div>
-                    </div>
-                    {session.status === 'valet_enroute_return' && (
-                      <div className="mt-3 pt-3 border-t border-orange-200 dark:border-orange-800/50">
-                        <Button 
-                          fullWidth 
-                          size="sm"
-                          variant="primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/return/${session.id}`);
-                          }}
-                        >
-                          Initiate Return Process
-                        </Button>
-                      </div>
-                    )}
-                  </Card>
-                </motion.div>
+                      Accept
+                    </GradientButton>
+                    <button
+                      onClick={() => setActiveRequests(prev => prev.filter(x => x.id !== r.id))}
+                      className="flex-1 py-2 rounded-full bg-white/10 text-white text-sm font-semibold active:scale-[0.98]"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </DarkCard>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <h2 className="text-lg font-bold text-[var(--text-primary)] mb-3">
-            Quick Actions
-          </h2>
+        {/* Active Sessions */}
+        {activeSessions.length > 0 && (
+          <div>
+            <SectionLabel>Active sessions</SectionLabel>
+            <div className="space-y-3">
+              {activeSessions.map(s => (
+                <DarkCard
+                  key={s.id}
+                  onClick={() => router.push(`/sessions/${s.id}`)}
+                  className={s.status === 'valet_enroute_return' ? 'border-[#FFB627]/50 ring-1 ring-[#FFB627]/30' : ''}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold truncate">{s.vehicleNumber}</p>
+                        {s.status === 'valet_enroute_return' && (
+                          <span className="px-1.5 py-0.5 bg-[#FFB627] text-[#0F1415] text-[9px] font-bold rounded-full animate-pulse uppercase tracking-wider">
+                            Return
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-white/55 mt-0.5">Slot: {s.slotNumber}</p>
+                      <p className="text-[10px] text-white/40 mt-0.5">Started {s.startTime}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p
+                        className={`text-sm font-bold ${
+                          s.status === 'valet_enroute_return' ? 'text-[#FFB627]' : 'text-[#34C0CA]'
+                        }`}
+                      >
+                        {s.status === 'valet_enroute_return' ? 'User waiting' : s.remainingTime}
+                      </p>
+                      <p className="text-[10px] text-white/40 mt-0.5">
+                        {s.status === 'valet_enroute_return' ? 'at pickup' : 'remaining'}
+                      </p>
+                    </div>
+                  </div>
+                  {s.status === 'valet_enroute_return' && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        router.push(`/return/${s.id}`);
+                      }}
+                      className="mt-3 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#34C0CA] to-[#66BD59] text-white text-sm font-bold active:scale-[0.98]"
+                    >
+                      Initiate return
+                    </button>
+                  )}
+                </DarkCard>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick actions */}
+        <div>
+          <SectionLabel>Quick actions</SectionLabel>
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: FiMapPin, label: 'Locations', href: '/parking-locations' },
               { icon: FiDollarSign, label: 'Earnings', href: '/earnings' },
-            ].map((action, index) => {
-              const Icon = action.icon;
+            ].map(a => {
+              const Icon = a.icon;
               return (
-                <motion.div
-                  key={action.label}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.9 + index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    onClick={() => router.push(action.href)}
-                    variant="outline"
-                    className="h-20 flex-col w-full"
-                  >
-                    <motion.div
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      <Icon size={24} />
-                    </motion.div>
-                    <span className="text-sm mt-1">{action.label}</span>
-                  </Button>
-                </motion.div>
+                <DarkCard key={a.label} onClick={() => router.push(a.href)} className="!p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center text-white shrink-0">
+                      <Icon size={18} />
+                    </div>
+                    <p className="flex-1 text-sm font-bold">{a.label}</p>
+                    <HiArrowRight className="w-4 h-4 text-white/40" />
+                  </div>
+                </DarkCard>
               );
             })}
           </div>
-        </motion.div>
+        </div>
       </div>
     </MobileContainer>
   );
 }
-

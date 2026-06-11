@@ -3,10 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FiCamera, FiCheck, FiX, FiDroplet, FiActivity, FiAlertCircle } from 'react-icons/fi';
-import Button from '../../components/Button';
-import Card from '../../components/Card';
-import Input from '../../components/Input';
 import MobileContainer from '../../components/MobileContainer';
+import { DarkCard, DarkInput, GradientButton, SectionLabel } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -18,163 +16,108 @@ export default function VehicleReturnPage() {
   const [damageFound, setDamageFound] = useState<string[]>([]);
   const [fuelLevel, setFuelLevel] = useState(45);
   const [odometer, setOdometer] = useState('');
-  const [initialFuel, setInitialFuel] = useState(50);
-  const [initialOdometer, setInitialOdometer] = useState('15000');
+  const [initialFuel] = useState(50);
+  const [initialOdometer] = useState('15000');
   const [booking, setBooking] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { setStatus } = useAuthStore();
 
   useEffect(() => {
     const fetchBooking = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-
-      if (data && !error) {
-        setBooking(data);
-        // In a real app, initial values would come from the inspection data saved during pickup
-        setInitialFuel(50);
-        setInitialOdometer('15000');
-      }
-      setIsLoading(false);
+      const { data } = await supabase.from('bookings').select('*').eq('id', params.id).single();
+      if (data) setBooking(data);
     };
-
-    if (params.id) {
-      fetchBooking();
-    }
+    if (params.id) fetchBooking();
   }, [params.id]);
 
   const imageTypes = [
     { key: 'front', label: 'Front' },
     { key: 'back', label: 'Back' },
-    { key: 'left', label: 'Left Side' },
-    { key: 'right', label: 'Right Side' },
+    { key: 'left', label: 'Left side' },
+    { key: 'right', label: 'Right side' },
   ];
 
   const handleImageCapture = (type: string, file: File) => {
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImages(prev => ({ ...prev, [type]: reader.result as string }));
-    };
+    reader.onloadend = () => setImages(prev => ({ ...prev, [type]: reader.result as string }));
     reader.readAsDataURL(file);
   };
 
   const toggleDamage = (area: string) => {
-    setDamageFound(prev =>
-      prev.includes(area)
-        ? prev.filter(d => d !== area)
-        : [...prev, area]
-    );
+    setDamageFound(prev => (prev.includes(area) ? prev.filter(d => d !== area) : [...prev, area]));
   };
 
-  const allImagesCaptured = imageTypes.every(type => images[type.key]);
+  const allImagesCaptured = imageTypes.every(t => images[t.key]);
   const fuelDifference = initialFuel - fuelLevel;
 
   const handleSubmit = async () => {
-    // Calculate final cost if there's overtime (e.g. ₹10 per 10 mins after 30 mins)
     let finalCost = Number(booking?.cost) || 80;
     if (booking?.parked_at) {
-      const parkedTime = new Date(booking.parked_at).getTime();
-      const now = new Date().getTime();
-      const diffMins = Math.floor((now - parkedTime) / (1000 * 60));
-
-      const baseMins = 30;
-      if (diffMins > baseMins) {
-        const overtimeMins = diffMins - baseMins;
-        const overtimeCharge = Math.ceil(overtimeMins / 10) * 10;
-        finalCost += overtimeCharge;
-      }
+      const diffMins = Math.floor((Date.now() - new Date(booking.parked_at).getTime()) / 60000);
+      if (diffMins > 30) finalCost += Math.ceil((diffMins - 30) / 10) * 10;
     }
-
-    const { error } = await supabase
+    await supabase
       .from('bookings')
-      .update({
-        status: 'valet_enroute_return',
-        cost: finalCost
-      })
+      .update({ status: 'valet_enroute_return', cost: finalCost })
       .eq('id', params.id);
-
-    if (!error) {
-      setStep('confirmation');
-    }
+    setStep('confirmation');
   };
 
   const handleComplete = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { error } = await supabase
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await supabase
       .from('bookings')
-      .update({
-        status: 'completed',
-        ended_at: new Date().toISOString()
-      })
+      .update({ status: 'completed', ended_at: new Date().toISOString() })
       .eq('id', params.id);
-
-    if (!error && user) {
-      // Also update partner status back to 'online' using the store
-      await setStatus('online');
-
-      router.push('/dashboard');
-    }
+    if (user) await setStatus('online');
+    router.push('/dashboard');
   };
 
   if (step === 'confirmation') {
     return (
       <MobileContainer>
-        <div className="p-4 space-y-6">
-          <Card>
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
-                  <FiCheck className="text-green-600 dark:text-green-400" size={48} />
-                </div>
-                <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
-                  Return Inspection Complete
-                </h1>
-              </div>
-
-              <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Total Charges</span>
-                  <span className="font-bold text-lg text-teal-600 dark:text-teal-400">
-                    ₹{booking?.cost || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Fuel Difference</span>
-                  <span className="font-semibold !text-gray-900 dark:!text-gray-100">
-                    {fuelDifference > 0 ? `-${fuelDifference}%` : 'No change'}
-                  </span>
-                </div>
-                {damageFound.length > 0 && (
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3">
-                    <div className="flex items-start gap-2">
-                      <FiAlertCircle className="text-red-500 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                          New Damage Reported
-                        </p>
-                        <p className="text-xs text-red-600 dark:text-red-300 mt-1">
-                          {damageFound.join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <Input
-                  label="User OTP"
-                  placeholder="Enter 6-digit OTP from user"
-                  maxLength={6}
-                />
-                <Button onClick={handleComplete} fullWidth>
-                  Complete Return
-                </Button>
-              </div>
+        <div className="p-4 space-y-4 pb-12">
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center mb-4 shadow-lg">
+              <FiCheck className="text-white" size={36} />
             </div>
-          </Card>
+            <h1 className="text-2xl font-extrabold text-[#0F1415]">Return inspection complete</h1>
+          </div>
+
+          <DarkCard>
+            <div className="flex justify-between mb-2">
+              <span className="text-white/65 text-sm">Total charges</span>
+              <span className="text-xl font-extrabold bg-gradient-to-r from-[#34C0CA] to-[#66BD59] bg-clip-text text-transparent">
+                ₹{booking?.cost || 0}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs text-white/55">
+              <span>Fuel difference</span>
+              <span className="text-white">
+                {fuelDifference > 0 ? `−${fuelDifference}%` : 'No change'}
+              </span>
+            </div>
+          </DarkCard>
+
+          {damageFound.length > 0 && (
+            <DarkCard className="border-[#EF4444]/30">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center shrink-0">
+                  <FiAlertCircle size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">New damage reported</p>
+                  <p className="text-[12px] text-white/70 mt-0.5">{damageFound.join(', ')}</p>
+                </div>
+              </div>
+            </DarkCard>
+          )}
+
+          <DarkInput label="User OTP" placeholder="6-digit OTP" maxLength={6} />
+          <GradientButton fullWidth size="lg" onClick={handleComplete}>
+            Complete return
+          </GradientButton>
         </div>
       </MobileContainer>
     );
@@ -182,141 +125,129 @@ export default function VehicleReturnPage() {
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold !text-gray-900">
-          Vehicle Return Inspection
-        </h1>
+      <div className="p-4 space-y-5 pb-32">
+        <div>
+          <p className="text-xs text-neutral-500">Return</p>
+          <h1 className="text-2xl font-extrabold text-[#0F1415]">Vehicle return inspection</h1>
+        </div>
 
-        <Card>
-          <div className="space-y-4">
-            <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
-              Capture Return Images
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {imageTypes.map((type) => (
-                <div key={type.key}>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {type.label}
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 aspect-square">
-                    {images[type.key] ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={images[type.key]}
-                          alt={type.label}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                        <button
-                          onClick={() => {
-                            const newImages = { ...images };
-                            delete newImages[type.key];
-                            setImages(newImages);
-                          }}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                        >
-                          <FiX size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer flex flex-col items-center justify-center h-full">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                          onChange={(e) =>
-                            e.target.files?.[0] &&
-                            handleImageCapture(type.key, e.target.files[0])
-                          }
-                        />
-                        <FiCamera className="text-gray-400 mb-2" size={24} />
-                        <span className="text-xs text-gray-500">Tap to capture</span>
-                      </label>
-                    )}
-                  </div>
+        <div>
+          <SectionLabel>Capture return images</SectionLabel>
+          <div className="grid grid-cols-2 gap-3">
+            {imageTypes.map(t => (
+              <div key={t.key}>
+                <label className="block text-[11px] font-semibold text-neutral-500 mb-1.5">
+                  {t.label}
+                </label>
+                <div className="relative aspect-square rounded-2xl overflow-hidden border-2 border-dashed border-neutral-300 bg-neutral-50">
+                  {images[t.key] ? (
+                    <>
+                      <img src={images[t.key]} alt={t.label} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => {
+                          const ni = { ...images };
+                          delete ni[t.key];
+                          setImages(ni);
+                        }}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center"
+                      >
+                        <FiX className="text-white" size={12} />
+                      </button>
+                    </>
+                  ) : (
+                    <label className="cursor-pointer flex flex-col items-center justify-center h-full gap-1.5">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={e =>
+                          e.target.files?.[0] && handleImageCapture(t.key, e.target.files[0])
+                        }
+                      />
+                      <FiCamera className="text-neutral-400" size={20} />
+                      <span className="text-[10px] text-neutral-500 font-semibold">Capture</span>
+                    </label>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </Card>
+        </div>
 
-        <Card>
-          <div className="space-y-4">
-            <h2 className="font-semibold !text-gray-900 dark:!text-gray-100">
-              Damage Check
-            </h2>
-            <div className="grid grid-cols-2 gap-2">
-              {['Front Bumper', 'Rear Bumper', 'Left Door', 'Right Door', 'Hood', 'Trunk'].map(
-                (area) => (
-                  <button
-                    key={area}
-                    onClick={() => toggleDamage(area)}
-                    className={`p-3 rounded-xl border-2 transition-colors text-sm ${damageFound.includes(area)
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                      : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                  >
-                    {area}
-                  </button>
-                )
-              )}
-            </div>
+        <div>
+          <SectionLabel>Damage check</SectionLabel>
+          <div className="grid grid-cols-2 gap-2">
+            {['Front bumper', 'Rear bumper', 'Left door', 'Right door', 'Hood', 'Trunk'].map(area => {
+              const active = damageFound.includes(area);
+              return (
+                <button
+                  key={area}
+                  onClick={() => toggleDamage(area)}
+                  className={`py-3 rounded-2xl text-sm font-semibold border transition ${
+                    active
+                      ? 'border-[#EF4444] bg-[#EF4444]/10 text-[#EF4444]'
+                      : 'border-neutral-200 bg-neutral-50 text-[#0F1415]'
+                  }`}
+                >
+                  {area}
+                </button>
+              );
+            })}
           </div>
-        </Card>
+        </div>
 
-        <Card>
+        <DarkCard>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Current Fuel Level (%)
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+                Fuel level
               </label>
               <div className="flex items-center gap-3">
-                <FiDroplet className="text-gray-400" size={20} />
+                <FiDroplet className="text-[#34C0CA]" size={18} />
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={fuelLevel}
-                  onChange={(e) => setFuelLevel(Number(e.target.value))}
-                  className="flex-1"
+                  onChange={e => setFuelLevel(Number(e.target.value))}
+                  className="flex-1 accent-[#66BD59]"
                 />
-                <span className="text-sm font-semibold w-12 text-right">{fuelLevel}%</span>
+                <span className="text-sm font-bold w-12 text-right">{fuelLevel}%</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Initial: {initialFuel}% | Used: {fuelDifference}%
+              <p className="text-[10px] text-white/40 mt-1">
+                Initial {initialFuel}% · Used {fuelDifference}%
               </p>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Current Odometer Reading (km)
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+                Odometer (km)
               </label>
-              <div className="flex items-center gap-3">
-                <FiActivity className="text-gray-400" size={20} />
-                <input
-                  type="text"
-                  value={odometer}
-                  onChange={(e) => setOdometer(e.target.value)}
-                  placeholder="Enter current reading"
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 !text-gray-900 dark:!text-gray-100 focus:outline-none focus:border-teal-500"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Initial: {initialOdometer} km
-              </p>
+              <input
+                type="text"
+                value={odometer}
+                onChange={e => setOdometer(e.target.value)}
+                placeholder="Current reading"
+                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-white placeholder-white/40 outline-none focus:border-[#34C0CA]"
+              />
+              <p className="text-[10px] text-white/40 mt-1">Initial {initialOdometer} km</p>
             </div>
           </div>
-        </Card>
+        </DarkCard>
+      </div>
 
-        <Button
-          onClick={handleSubmit}
-          fullWidth
-          disabled={!allImagesCaptured || !odometer}
-        >
-          Complete Inspection
-        </Button>
+      <div className="fixed bottom-20 inset-x-0 p-4 z-30">
+        <div className="max-w-md mx-auto">
+          <GradientButton
+            fullWidth
+            size="lg"
+            disabled={!allImagesCaptured || !odometer}
+            onClick={handleSubmit}
+          >
+            Complete inspection
+          </GradientButton>
+        </div>
       </div>
     </MobileContainer>
   );
 }
-

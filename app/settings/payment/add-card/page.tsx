@@ -2,11 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiCreditCard, FiLock, FiCheckCircle } from 'react-icons/fi';
-import Card from '../../../components/Card';
-import Button from '../../../components/Button';
-import Input from '../../../components/Input';
+import { FiArrowLeft, FiCreditCard, FiLock, FiCheckCircle, FiUser, FiChevronDown } from 'react-icons/fi';
 import MobileContainer from '../../../components/MobileContainer';
+import { DarkCard, GradientButton, DarkInput } from '../../../components/ui';
 
 export default function AddCardPage() {
   const router = useRouter();
@@ -23,12 +21,7 @@ export default function AddCardPage() {
   const formatCardNumber = (value: string) => {
     const cleaned = value.replace(/\s/g, '');
     const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
-    return formatted.slice(0, 19); // Max 16 digits + 3 spaces
-  };
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCardNumber(e.target.value);
-    setFormData(prev => ({ ...prev, cardNumber: formatted }));
+    return formatted.slice(0, 19);
   };
 
   const validateCard = () => {
@@ -42,41 +35,26 @@ export default function AddCardPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateCard()) {
-      alert('Please fill all card details correctly');
-      return;
-    }
-
+    if (!validateCard()) return;
     setIsSubmitting(true);
-
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
-      setTimeout(() => {
-        router.push('/settings');
-      }, 2000);
-    }, 1500);
+      setTimeout(() => router.push('/settings'), 1500);
+    }, 1200);
   };
 
   if (isSuccess) {
     return (
       <MobileContainer>
-        <div className="p-4 space-y-6">
-          <Card>
-            <div className="text-center py-8">
-              <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
-                <FiCheckCircle className="text-green-600 dark:text-green-400" size={48} />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                Card Added Successfully!
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Your card has been added and verified.
-              </p>
-            </div>
-          </Card>
+        <div className="p-4 flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center mb-4 shadow-lg">
+            <FiCheckCircle className="text-white" size={40} />
+          </div>
+          <h1 className="text-2xl font-extrabold text-[#0F1415]">Card added</h1>
+          <p className="text-sm text-neutral-500 mt-2 max-w-xs">
+            Your card has been securely saved for payouts.
+          </p>
         </div>
       </MobileContainer>
     );
@@ -84,138 +62,131 @@ export default function AddCardPage() {
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="p-4 space-y-4 pb-12">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-300 text-[var(--text-primary)] rounded-lg transition-colors"
+            className="w-11 h-11 rounded-full bg-[#13191C] flex items-center justify-center text-white active:scale-95 transition shrink-0 shadow-md"
           >
-            <FiArrowLeft size={20} className="" />
+            <FiArrowLeft size={18} />
           </button>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-            Add Card
-          </h1>
+          <div>
+            <p className="text-xs text-neutral-500">Payment</p>
+            <h1 className="text-xl font-extrabold text-[#0F1415] leading-tight">Add card</h1>
+          </div>
         </div>
 
-        <Card>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-teal-100 dark:bg-teal-900/20">
-                <FiCreditCard className="text-teal-600 dark:text-teal-400" size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold !text-gray-100">
-                  Debit/Credit Card
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Secure payment method for payouts
-                </p>
+        <DarkCard glow>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center shrink-0">
+              <FiCreditCard className="text-white" size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold">Debit / credit card</p>
+              <p className="text-[11px] text-white/55">Used to receive payouts</p>
+            </div>
+          </div>
+        </DarkCard>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <DarkInput
+            label="Card number"
+            placeholder="1234 5678 9012 3456"
+            value={formData.cardNumber}
+            onChange={e => setFormData(prev => ({ ...prev, cardNumber: formatCardNumber(e.target.value) }))}
+            maxLength={19}
+            required
+            leftIcon={<FiCreditCard size={18} />}
+          />
+          <DarkInput
+            label="Cardholder name"
+            placeholder="Name as on card"
+            value={formData.cardHolderName}
+            onChange={e => setFormData(prev => ({ ...prev, cardHolderName: e.target.value }))}
+            required
+            leftIcon={<FiUser size={18} />}
+          />
+
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-sm font-semibold text-[#0F1415] mb-2">Month</label>
+              <div className="relative">
+                <select
+                  value={formData.expiryMonth}
+                  onChange={e => setFormData(prev => ({ ...prev, expiryMonth: e.target.value }))}
+                  className="w-full px-3 py-3.5 pr-8 bg-neutral-50 border border-neutral-200 rounded-2xl text-sm font-semibold text-[#0F1415] appearance-none outline-none focus:border-[#34C0CA]"
+                  required
+                >
+                  <option value="">MM</option>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const m = String(i + 1).padStart(2, '0');
+                    return (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    );
+                  })}
+                </select>
+                <FiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
               </div>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label="Card Number"
-                placeholder="1234 5678 9012 3456"
-                value={formData.cardNumber}
-                onChange={handleCardNumberChange}
-                maxLength={19}
-                required
-                icon={<FiCreditCard size={18} />}
-              />
-
-              <Input
-                label="Card Holder Name"
-                placeholder="Name as on card"
-                value={formData.cardHolderName}
-                onChange={(e) => setFormData(prev => ({ ...prev, cardHolderName: e.target.value }))}
-                required
-              />
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Month
-                  </label>
-                  <select
-                    value={formData.expiryMonth}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expiryMonth: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
-                    required
-                  >
-                    <option value="">MM</option>
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const month = String(i + 1).padStart(2, '0');
-                      return (
-                        <option key={month} value={month}>
-                          {month}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Year
-                  </label>
-                  <select
-                    value={formData.expiryYear}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expiryYear: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-teal-500"
-                    required
-                  >
-                    <option value="">YY</option>
-                    {Array.from({ length: 20 }, (_, i) => {
-                      const year = new Date().getFullYear() + i;
-                      return (
-                        <option key={year} value={String(year).slice(-2)}>
-                          {String(year).slice(-2)}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-                <div className="col-span-1">
-                  <Input
-                    label="CVV"
-                    placeholder="123"
-                    type="password"
-                    value={formData.cvv}
-                    onChange={(e) => setFormData(prev => ({ ...prev, cvv: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
-                    maxLength={3}
-                    required
-                    icon={<FiLock size={18} />}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  fullWidth
-                  loading={isSubmitting}
-                  disabled={!validateCard() || isSubmitting}
+            <div>
+              <label className="block text-sm font-semibold text-[#0F1415] mb-2">Year</label>
+              <div className="relative">
+                <select
+                  value={formData.expiryYear}
+                  onChange={e => setFormData(prev => ({ ...prev, expiryYear: e.target.value }))}
+                  className="w-full px-3 py-3.5 pr-8 bg-neutral-50 border border-neutral-200 rounded-2xl text-sm font-semibold text-[#0F1415] appearance-none outline-none focus:border-[#34C0CA]"
+                  required
                 >
-                  Add Card
-                </Button>
+                  <option value="">YY</option>
+                  {Array.from({ length: 20 }, (_, i) => {
+                    const y = new Date().getFullYear() + i;
+                    return (
+                      <option key={y} value={String(y).slice(-2)}>
+                        {String(y).slice(-2)}
+                      </option>
+                    );
+                  })}
+                </select>
+                <FiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
               </div>
-            </form>
+            </div>
+            <DarkInput
+              label="CVV"
+              placeholder="123"
+              type="password"
+              value={formData.cvv}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, cvv: e.target.value.replace(/\D/g, '').slice(0, 3) }))
+              }
+              maxLength={3}
+              required
+            />
           </div>
-        </Card>
 
-        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <div className="space-y-2">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm flex items-center gap-2">
-              <FiLock size={16} />
-              Secure & Encrypted
-            </h4>
-            <p className="text-xs text-blue-700 dark:text-blue-300">
-              Your card details are encrypted and securely stored. We never store your CVV.
+          <DarkCard className="!p-3 mt-1">
+            <div className="flex items-center gap-2 text-xs">
+              <FiLock className="text-[#66BD59]" size={14} />
+              <span className="text-white/80 font-semibold">Encrypted & secure</span>
+            </div>
+            <p className="text-[11px] text-white/55 mt-1">
+              Your card details are encrypted. We never store your CVV.
             </p>
+          </DarkCard>
+
+          <div className="pt-2">
+            <GradientButton
+              type="submit"
+              fullWidth
+              loading={isSubmitting}
+              disabled={!validateCard()}
+            >
+              Add card
+            </GradientButton>
           </div>
-        </Card>
+        </form>
       </div>
     </MobileContainer>
   );
 }
-

@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiCreditCard, FiCheckCircle } from 'react-icons/fi';
-import Card from '../../../components/Card';
-import Button from '../../../components/Button';
-import Input from '../../../components/Input';
+import { FiArrowLeft, FiUser, FiCheckCircle } from 'react-icons/fi';
+import { HiQrcode } from 'react-icons/hi';
 import MobileContainer from '../../../components/MobileContainer';
+import { DarkCard, GradientButton, DarkInput } from '../../../components/ui';
 
 export default function AddUPIPage() {
   const router = useRouter();
@@ -15,54 +14,30 @@ export default function AddUPIPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const validateUPI = (id: string) => {
-    // UPI ID format: username@paytm or username@upi
-    const upiPattern = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
-    return upiPattern.test(id);
-  };
+  const validateUPI = (id: string) => /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateUPI(upiId)) {
-      alert('Please enter a valid UPI ID (e.g., username@paytm)');
-      return;
-    }
-
-    if (!name.trim()) {
-      alert('Please enter your name');
-      return;
-    }
-
+    if (!validateUPI(upiId) || !name.trim()) return;
     setIsSubmitting(true);
-
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
-      setTimeout(() => {
-        router.push('/settings');
-      }, 2000);
-    }, 1500);
+      setTimeout(() => router.push('/settings'), 1500);
+    }, 1200);
   };
 
   if (isSuccess) {
     return (
       <MobileContainer>
-        <div className="p-4 space-y-6">
-          <Card>
-            <div className="text-center py-8">
-              <div className="inline-flex p-6 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
-                <FiCheckCircle className="text-green-600 dark:text-green-400" size={48} />
-              </div>
-              <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
-                UPI ID Added Successfully!
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Your UPI ID has been added and verified.
-              </p>
-            </div>
-          </Card>
+        <div className="p-4 flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center mb-4 shadow-lg">
+            <FiCheckCircle className="text-white" size={40} />
+          </div>
+          <h1 className="text-2xl font-extrabold text-[#0F1415]">UPI ID added</h1>
+          <p className="text-sm text-neutral-500 mt-2 max-w-xs">
+            Your UPI ID has been verified and saved.
+          </p>
         </div>
       </MobileContainer>
     );
@@ -70,85 +45,85 @@ export default function AddUPIPage() {
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-4">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="p-4 space-y-4 pb-12">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="w-11 h-11 rounded-full bg-[#13191C] flex items-center justify-center text-white active:scale-95 transition shrink-0 shadow-md"
           >
-            <FiArrowLeft size={20} className="text-gray-900 dark:text-gray-100" />
+            <FiArrowLeft size={18} />
           </button>
-          <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100">
-            Add UPI ID
-          </h1>
+          <div>
+            <p className="text-xs text-neutral-500">Payment</p>
+            <h1 className="text-xl font-extrabold text-[#0F1415] leading-tight">Add UPI ID</h1>
+          </div>
         </div>
 
-        <Card>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-teal-100 dark:bg-teal-900/20">
-                <FiCreditCard className="text-teal-600 dark:text-teal-400" size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold !text-gray-900 dark:!text-gray-100">
-                  UPI Payment Method
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Receive payments directly to your UPI ID
-                </p>
-              </div>
+        <DarkCard glow>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#34C0CA] to-[#66BD59] flex items-center justify-center shrink-0">
+              <HiQrcode className="text-white w-5 h-5" />
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label="UPI ID"
-                placeholder="username@paytm or username@upi"
-                value={upiId}
-                onChange={(e) => setUpiId(e.target.value)}
-                required
-                icon={<FiCreditCard size={18} />}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
-                Format: yourname@paytm, yourname@phonepe, yourname@googlepay, etc.
-              </p>
-
-              <Input
-                label="Account Holder Name"
-                placeholder="Enter your name as per bank records"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  fullWidth
-                  loading={isSubmitting}
-                  disabled={!upiId || !name || isSubmitting}
-                >
-                  Add UPI ID
-                </Button>
-              </div>
-            </form>
+            <div className="flex-1">
+              <p className="text-sm font-bold">UPI payouts</p>
+              <p className="text-[11px] text-white/55">Receive payments directly to your UPI</p>
+            </div>
           </div>
-        </Card>
+        </DarkCard>
 
-        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <div className="space-y-2">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm">
-              Why add UPI ID?
-            </h4>
-            <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
-              <li>Instant payments directly to your UPI account</li>
-              <li>No bank account details required</li>
-              <li>Secure and verified transactions</li>
-              <li>24/7 availability for payouts</li>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <DarkInput
+            label="UPI ID"
+            placeholder="username@paytm"
+            value={upiId}
+            onChange={e => setUpiId(e.target.value)}
+            required
+            leftIcon={<HiQrcode className="w-5 h-5" />}
+            helperText="Examples: yourname@paytm, yourname@okhdfcbank, yourname@upi"
+          />
+          <DarkInput
+            label="Account holder name"
+            placeholder="As per bank records"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+            leftIcon={<FiUser size={18} />}
+          />
+
+          <DarkCard className="!p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-white/55 mb-2">Why UPI?</p>
+            <ul className="text-xs text-white/85 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#66BD59] mt-1.5 shrink-0" />
+                <span>Instant payments to your UPI account</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#66BD59] mt-1.5 shrink-0" />
+                <span>No bank account details required</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#66BD59] mt-1.5 shrink-0" />
+                <span>Secure, verified transactions</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#66BD59] mt-1.5 shrink-0" />
+                <span>24/7 payouts available</span>
+              </li>
             </ul>
+          </DarkCard>
+
+          <div className="pt-2">
+            <GradientButton
+              type="submit"
+              fullWidth
+              loading={isSubmitting}
+              disabled={!upiId || !name}
+            >
+              Add UPI ID
+            </GradientButton>
           </div>
-        </Card>
+        </form>
       </div>
     </MobileContainer>
   );
 }
-

@@ -2,9 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { FiCheckCircle, FiClock, FiXCircle, FiAlertCircle } from 'react-icons/fi';
-import Button from '../../components/Button';
-import Card from '../../components/Card';
 import MobileContainer from '../../components/MobileContainer';
+import { DarkCard, GradientButton } from '../../components/ui';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import { useEffect, useState } from 'react';
@@ -18,23 +17,16 @@ export default function KYCStatusPage() {
   useEffect(() => {
     const checkStatus = async () => {
       if (user) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('kyc_status, kyc_rejection_reason')
           .eq('id', user.id)
           .single();
-
-        if (data?.kyc_status) {
-          setStatus(data.kyc_status as any);
-        }
-        if (data?.kyc_rejection_reason) {
-          setRejectionReason(data.kyc_rejection_reason);
-        }
+        if (data?.kyc_status) setStatus(data.kyc_status as any);
+        if (data?.kyc_rejection_reason) setRejectionReason(data.kyc_rejection_reason);
       }
     };
-
     checkStatus();
-    // Refresh profile state in store as well
     fetchProfile();
   }, [user, fetchProfile]);
 
@@ -47,93 +39,92 @@ export default function KYCStatusPage() {
     }
   };
 
-  const statusConfig = {
+  const config = {
     pending: {
       icon: FiClock,
-      color: 'text-yellow-500',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-      title: 'Verification Pending',
-      message: 'Your KYC documents are under review. This usually takes 24-48 hours.',
+      color: '#FFB627',
+      title: 'Verification pending',
+      msg: 'Your KYC documents are under review. This usually takes 24-48 hours.',
     },
     approved: {
       icon: FiCheckCircle,
-      color: 'text-green-500',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      title: 'Verification Approved',
-      message: 'Congratulations! Your KYC has been approved. You can now start accepting parking requests.',
+      color: '#66BD59',
+      title: 'Verification approved',
+      msg: "You're all set. Start accepting parking requests now.",
     },
     rejected: {
       icon: FiXCircle,
-      color: 'text-red-500',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      title: 'Verification Rejected',
-      message: 'Your KYC verification was rejected. Please check the reason and resubmit your documents.',
+      color: '#EF4444',
+      title: 'Verification rejected',
+      msg: 'Please check the reason below and resubmit your documents.',
     },
-  };
-
-  const config = statusConfig[status];
+  }[status];
   const Icon = config.icon;
 
   return (
     <MobileContainer>
-      <div className="p-4 space-y-6">
-        <Card>
-          <div className="text-center py-8">
-            <div className={`inline-flex p-6 rounded-full ${config.bgColor} mb-4`}>
-              <Icon size={64} className={config.color} />
-            </div>
-            <h1 className="text-2xl font-bold !text-gray-900 dark:!text-gray-100 mb-2">
-              {config.title}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {config.message}
-            </p>
-            {status === 'rejected' && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6 text-left">
-                <div className="flex items-start gap-2">
-                  <FiAlertCircle className="text-red-500 mt-1" />
-                  <div>
-                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                      Reason for Rejection:
-                    </p>
-                    <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                      {rejectionReason || 'Please check your documents and resubmit.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="space-y-3">
-              {status === 'pending' && (
-                <>
-                  <Button onClick={() => router.push('/parking-locations')} variant="outline" fullWidth>
-                    Set Up Parking Locations
-                  </Button>
-                  <Button onClick={() => router.push('/profile')} variant="secondary" fullWidth>
-                    View Profile
-                  </Button>
-                </>
-              )}
-              {status === 'approved' && (
-                <Button onClick={handleContinue} fullWidth>
-                  Go to Dashboard
-                </Button>
-              )}
-              {status === 'rejected' && (
-                <>
-                  <Button onClick={() => router.push('/kyc/identity')} fullWidth>
-                    Resubmit Documents
-                  </Button>
-                  <Button onClick={() => router.push('/support')} variant="outline" fullWidth>
-                    Contact Support
-                  </Button>
-                </>
-              )}
-            </div>
+      <div className="p-4 space-y-5 pb-12">
+        <div className="flex flex-col items-center text-center pt-6">
+          <div
+            className="w-24 h-24 rounded-3xl flex items-center justify-center mb-4 shadow-lg"
+            style={{ backgroundColor: `${config.color}26`, color: config.color }}
+          >
+            <Icon size={48} />
           </div>
-        </Card>
+          <h1 className="text-2xl font-extrabold text-[#0F1415]">{config.title}</h1>
+          <p className="text-sm text-neutral-500 mt-2 max-w-xs">{config.msg}</p>
+        </div>
+
+        {status === 'rejected' && (
+          <DarkCard className="border-[#EF4444]/30">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center shrink-0">
+                <FiAlertCircle size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Reason</p>
+                <p className="text-[12px] text-white/70 mt-0.5">
+                  {rejectionReason || 'Please check your documents and resubmit.'}
+                </p>
+              </div>
+            </div>
+          </DarkCard>
+        )}
+
+        <div className="space-y-3">
+          {status === 'pending' && (
+            <>
+              <GradientButton fullWidth size="lg" onClick={() => router.push('/parking-locations')}>
+                Set up parking locations
+              </GradientButton>
+              <button
+                onClick={() => router.push('/profile')}
+                className="w-full py-3.5 rounded-full bg-white border border-neutral-200 text-[#0F1415] font-semibold active:scale-[0.98]"
+              >
+                View profile
+              </button>
+            </>
+          )}
+          {status === 'approved' && (
+            <GradientButton fullWidth size="lg" onClick={handleContinue}>
+              Go to dashboard
+            </GradientButton>
+          )}
+          {status === 'rejected' && (
+            <>
+              <GradientButton fullWidth size="lg" onClick={() => router.push('/kyc/identity')}>
+                Resubmit documents
+              </GradientButton>
+              <button
+                onClick={() => router.push('/support')}
+                className="w-full py-3.5 rounded-full bg-white border border-neutral-200 text-[#0F1415] font-semibold active:scale-[0.98]"
+              >
+                Contact support
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </MobileContainer>
   );
 }
-
