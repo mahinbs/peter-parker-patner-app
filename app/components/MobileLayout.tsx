@@ -103,16 +103,14 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
     return 'Dashboard';
   };
 
-  const isDashboard = pathname === '/dashboard';
-
   return (
-    <div className="min-h-screen w-full  bg-[var(--color-background)] text-[var(--text-primary)] pb-20 lg:h-full lg:flex lg:flex-col lg:pb-0">
+    <div className="min-h-screen w-full bg-[var(--color-background)] text-[var(--text-primary)] pb-20 lg:h-full lg:flex lg:flex-col lg:pb-0">
       {/* Premium Header with logo */}
-      <motion.header 
+      <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        className={`sticky top-0 z-50 text-white lg:relative lg:sticky ${isDashboard ? 'bg-transparent shadow-none' : 'gradient-primary shadow-xl'}`}
+        className="sticky top-0 z-50 text-white lg:relative lg:sticky gradient-primary shadow-xl"
       >
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-3">
@@ -160,7 +158,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               }}
               className={`h-2 w-2 rounded-full ${statusConfig.color}`}
             />
-            <span className="text-black/90">{statusConfig.label}</span>
+            <span className="text-white">{statusConfig.label}</span>
           </motion.div>
         </div>
       </motion.header>

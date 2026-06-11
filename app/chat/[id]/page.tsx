@@ -108,7 +108,7 @@ export default function ChatPage() {
                   }`}
                 >
                   <p className="text-sm">{msg.text}</p>
-                  <p className={`text-[10px] mt-0.5 ${mine ? 'text-white/75' : 'text-white/50'}`}>
+                  <p className={`text-[10px] mt-0.5 ${mine ? 'text-white/85' : 'text-white/85'}`}>
                     {new Date(msg.created_at).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',

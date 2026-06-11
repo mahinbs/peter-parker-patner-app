@@ -115,7 +115,7 @@ export default function ActiveSessionPage() {
           <div className="relative p-6 text-center">
             <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-[#34C0CA]/30 to-[#66BD59]/30 rounded-full blur-3xl" />
             <div className="relative">
-              <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+              <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                 Free time remaining
               </p>
               <p
@@ -127,7 +127,7 @@ export default function ActiveSessionPage() {
               >
                 {formatTime(remainingTime)}
               </p>
-              <p className="text-[11px] text-white/55 mt-2">
+              <p className="text-[11px] text-white/85 mt-2">
                 Current cost ₹{booking.cost || 0}
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function ActiveSessionPage() {
                 <FiClock size={18} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                   Parked since
                 </p>
                 <p className="text-sm font-bold">
@@ -154,7 +154,7 @@ export default function ActiveSessionPage() {
                 <FiMapPin size={18} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                   Parking location
                 </p>
                 <p className="text-sm font-bold leading-snug">
@@ -173,7 +173,7 @@ export default function ActiveSessionPage() {
               </div>
               <div>
                 <p className="text-sm font-bold">Overtime approaching</p>
-                <p className="text-[11px] text-white/55 mt-0.5">
+                <p className="text-[11px] text-white/85 mt-0.5">
                   Free stay ending — overtime charges will apply.
                 </p>
               </div>

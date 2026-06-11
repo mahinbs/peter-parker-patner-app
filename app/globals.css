@@ -93,22 +93,24 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-a {
-  color: var(--color-primary-accent);
-  transition: color 0.2s ease;
-}
+@layer base {
+  a {
+    color: var(--color-primary-accent);
+    transition: color 0.2s ease;
+  }
 
-a:hover {
-  color: var(--color-primary-accent-hover);
-}
+  a:hover {
+    color: var(--color-primary-accent-hover);
+  }
 
-h1, h2 {
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  h1, h2 {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-p {
-  color: var(--text-secondary);
+  p {
+    color: var(--text-secondary);
+  }
 }
 
 ::selection {

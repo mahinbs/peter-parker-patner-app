@@ -130,7 +130,7 @@ export default function VehiclePickupPage() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold">Vehicle is parked</p>
-                <p className="text-[11px] text-white/55">
+                <p className="text-[11px] text-white/85">
                   Confirm the vehicle is safely at the location
                 </p>
               </div>
@@ -230,7 +230,7 @@ export default function VehiclePickupPage() {
         <DarkCard>
           <div className="space-y-4">
             <div>
-              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/85 mb-2">
                 Fuel level
               </label>
               <div className="flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function VehiclePickupPage() {
               </div>
             </div>
             <div>
-              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/85 mb-2">
                 Odometer (km)
               </label>
               <div className="flex items-center gap-2">

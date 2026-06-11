@@ -94,13 +94,13 @@ export default function ParkingLocationsPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-white/55 mt-0.5 line-clamp-2">{loc.address}</p>
+                    <p className="text-[11px] text-white/85 mt-0.5 line-clamp-2">{loc.address}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/10 text-sm">
                   <div>
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                       Slots
                     </p>
                     <p className="text-sm font-bold">
@@ -108,7 +108,7 @@ export default function ParkingLocationsPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                       Base price
                     </p>
                     <p className="text-sm font-bold">₹{loc.basePrice}/hr</p>

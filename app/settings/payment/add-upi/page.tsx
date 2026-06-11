@@ -66,7 +66,7 @@ export default function AddUPIPage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold">UPI payouts</p>
-              <p className="text-[11px] text-white/55">Receive payments directly to your UPI</p>
+              <p className="text-[11px] text-white/85">Receive payments directly to your UPI</p>
             </div>
           </div>
         </DarkCard>
@@ -91,7 +91,7 @@ export default function AddUPIPage() {
           />
 
           <DarkCard className="!p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-white/55 mb-2">Why UPI?</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-white/85 mb-2">Why UPI?</p>
             <ul className="text-xs text-white/85 space-y-1.5">
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#66BD59] mt-1.5 shrink-0" />

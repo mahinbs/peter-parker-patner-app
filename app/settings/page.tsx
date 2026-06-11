@@ -59,7 +59,7 @@ export default function SettingsPage() {
                       <p className="text-sm font-semibold text-white leading-tight">
                         {notifLabels[key].title}
                       </p>
-                      <p className="text-[11px] text-white/55 leading-tight mt-0.5">
+                      <p className="text-[11px] text-white/85 leading-tight mt-0.5">
                         {notifLabels[key].desc}
                       </p>
                     </div>
@@ -100,7 +100,7 @@ export default function SettingsPage() {
                   <option className="text-[#0F1415]">Marathi</option>
                   <option className="text-[#0F1415]">Tamil</option>
                 </select>
-                <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/55 pointer-events-none" />
+                <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/85 pointer-events-none" />
               </div>
             </div>
           </DarkCard>
@@ -116,7 +116,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white">Bank account</p>
-                <p className="text-[11px] text-white/55 font-mono">•••• 1234</p>
+                <p className="text-[11px] text-white/85 font-mono">•••• 1234</p>
               </div>
               <button className="text-xs font-semibold text-[#34C0CA] active:opacity-70">Edit</button>
             </div>
@@ -131,7 +131,7 @@ export default function SettingsPage() {
                 <span className="flex items-center gap-2">
                   <HiPlus className="w-4 h-4 text-[#66BD59]" /> Add UPI ID
                 </span>
-                <HiChevronRight className="w-5 h-5 text-white/40" />
+                <HiChevronRight className="w-5 h-5 text-white/85" />
               </button>
               <button
                 onClick={() => router.push('/settings/payment/add-card')}
@@ -140,7 +140,7 @@ export default function SettingsPage() {
                 <span className="flex items-center gap-2">
                   <HiPlus className="w-4 h-4 text-[#66BD59]" /> Add card
                 </span>
-                <HiChevronRight className="w-5 h-5 text-white/40" />
+                <HiChevronRight className="w-5 h-5 text-white/85" />
               </button>
             </div>
           </DarkCard>
@@ -157,9 +157,9 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white">Change password</p>
-                  <p className="text-[11px] text-white/55">Update your account password</p>
+                  <p className="text-[11px] text-white/85">Update your account password</p>
                 </div>
-                <HiChevronRight className="w-5 h-5 text-white/40" />
+                <HiChevronRight className="w-5 h-5 text-white/85" />
               </button>
               <button className="w-full flex items-center gap-3 px-2 py-3 text-left">
                 <div className="w-10 h-10 rounded-xl bg-[#34C0CA]/15 text-[#34C0CA] flex items-center justify-center shrink-0">
@@ -167,9 +167,9 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white">Two-factor authentication</p>
-                  <p className="text-[11px] text-white/55">Extra security on sign in</p>
+                  <p className="text-[11px] text-white/85">Extra security on sign in</p>
                 </div>
-                <HiChevronRight className="w-5 h-5 text-white/40" />
+                <HiChevronRight className="w-5 h-5 text-white/85" />
               </button>
             </div>
           </DarkCard>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white">Operating hours</p>
-                <p className="text-[11px] text-white/55">Set when you're available to accept requests</p>
+                <p className="text-[11px] text-white/85">Set when you're available to accept requests</p>
               </div>
             </div>
             <div className="mt-3 flex justify-end">

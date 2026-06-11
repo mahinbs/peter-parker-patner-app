@@ -123,7 +123,7 @@ export default function RequestDetailPage() {
               <h1 className="text-xl font-extrabold">
                 {booking.status === 'valet_arrived_pickup' ? "You've arrived" : 'Request accepted'}
               </h1>
-              <p className="text-xs text-white/55 mt-1 max-w-xs">
+              <p className="text-xs text-white/85 mt-1 max-w-xs">
                 {booking.status === 'valet_arrived_pickup'
                   ? 'Wait for the user or start inspection'
                   : 'Navigate to the pickup location'}
@@ -137,7 +137,7 @@ export default function RequestDetailPage() {
                 <FiMapPin size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Pickup</p>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Pickup</p>
                 <p className="text-sm font-semibold leading-snug">{booking.pickup_location}</p>
               </div>
             </div>
@@ -198,11 +198,11 @@ export default function RequestDetailPage() {
         <DarkCard>
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div>
-              <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Vehicle</p>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Vehicle</p>
               <p className="text-base font-bold mt-0.5">{booking.vehicle_type}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">You earn</p>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">You earn</p>
               <p className="text-xl font-extrabold bg-gradient-to-r from-[#34C0CA] to-[#66BD59] bg-clip-text text-transparent">
                 ₹{booking.cost}
               </p>
@@ -215,9 +215,9 @@ export default function RequestDetailPage() {
                 <FiMapPin size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Pickup</p>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Pickup</p>
                 <p className="text-sm font-semibold leading-snug">{booking.pickup_location}</p>
-                <p className="text-[11px] text-white/40 mt-0.5">1.2 km away</p>
+                <p className="text-[11px] text-white/85 mt-0.5">1.2 km away</p>
               </div>
             </div>
 
@@ -226,7 +226,7 @@ export default function RequestDetailPage() {
                 <FiClock size={18} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Duration</p>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Duration</p>
                 <p className="text-sm font-semibold">30 mins free + extensions</p>
               </div>
             </div>
@@ -236,16 +236,16 @@ export default function RequestDetailPage() {
                 <FiDollarSign size={18} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Pricing</p>
-                <p className="text-xs text-white/65">First 30 mins complimentary</p>
-                <p className="text-xs text-white/65">₹10 per extra 10 min</p>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Pricing</p>
+                <p className="text-xs text-white/85">First 30 mins complimentary</p>
+                <p className="text-xs text-white/85">₹10 per extra 10 min</p>
               </div>
             </div>
           </div>
         </DarkCard>
 
         <DarkCard>
-          <p className="text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+          <p className="text-[10px] uppercase font-bold tracking-wider text-white/85 mb-2">
             Contact user
           </p>
           <div className="flex gap-2">

@@ -110,7 +110,7 @@ export default function SupportPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold leading-tight">{faq.q}</p>
-                    <p className="text-xs text-white/65 mt-1.5 leading-snug">{faq.a}</p>
+                    <p className="text-xs text-white/85 mt-1.5 leading-snug">{faq.a}</p>
                   </div>
                 </div>
               </DarkCard>
@@ -122,7 +122,7 @@ export default function SupportPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold">Need more help?</p>
-                  <p className="text-[11px] text-white/55">support@valetpartner.com · +91 1800 123 4567</p>
+                  <p className="text-[11px] text-white/85">support@valetpartner.com · +91 1800 123 4567</p>
                 </div>
               </div>
             </DarkCard>
@@ -189,8 +189,8 @@ export default function SupportPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-bold truncate">{d.subject}</p>
-                      <p className="text-[11px] text-white/55 capitalize">{d.category}</p>
-                      <p className="text-[10px] text-white/40 mt-1">
+                      <p className="text-[11px] text-white/85 capitalize">{d.category}</p>
+                      <p className="text-[10px] text-white/85 mt-1">
                         {new Date(d.created_at).toLocaleDateString()}
                       </p>
                     </div>

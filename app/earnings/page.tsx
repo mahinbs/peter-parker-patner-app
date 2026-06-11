@@ -119,7 +119,7 @@ export default function EarningsPage() {
           <div className="relative p-5">
             <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-[#34C0CA]/30 to-[#66BD59]/30 rounded-full blur-3xl" />
             <div className="relative">
-              <p className="text-xs text-white/55 uppercase tracking-wider">Available balance</p>
+              <p className="text-xs text-white/85 uppercase tracking-wider">Available balance</p>
               <p className="text-4xl font-extrabold mt-1 tracking-tight">
                 ₹{wallet?.balance.toLocaleString() ?? '0'}
               </p>
@@ -166,7 +166,7 @@ export default function EarningsPage() {
               <div className="w-9 h-9 rounded-xl bg-[#66BD59]/15 text-[#66BD59] flex items-center justify-center">
                 <FiDollarSign size={16} />
               </div>
-              <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Total earnings</p>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Total earnings</p>
             </div>
             <p className="text-xl font-extrabold">₹{stats.total.toLocaleString()}</p>
           </DarkCard>
@@ -175,7 +175,7 @@ export default function EarningsPage() {
               <div className="w-9 h-9 rounded-xl bg-[#34C0CA]/15 text-[#34C0CA] flex items-center justify-center">
                 <FiTrendingUp size={16} />
               </div>
-              <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">Sessions</p>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">Sessions</p>
             </div>
             <p className="text-xl font-extrabold">{stats.sessions}</p>
           </DarkCard>
@@ -183,14 +183,14 @@ export default function EarningsPage() {
 
         {/* Breakdown */}
         <DarkCard>
-          <p className="text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">Breakdown</p>
+          <p className="text-[10px] uppercase font-bold tracking-wider text-white/85 mb-2">Breakdown</p>
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-white/65">Average per session</span>
+              <span className="text-white/85">Average per session</span>
               <span className="font-semibold">₹{stats.average}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/65">Platform commission (10%)</span>
+              <span className="text-white/85">Platform commission (10%)</span>
               <span className="font-semibold text-[#EF4444]">−₹{platformFee}</span>
             </div>
           </div>
@@ -230,7 +230,7 @@ export default function EarningsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{tx.title}</p>
-                      <p className="text-[11px] text-white/55 mt-0.5">{tx.subtitle}</p>
+                      <p className="text-[11px] text-white/85 mt-0.5">{tx.subtitle}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p
@@ -240,7 +240,7 @@ export default function EarningsPage() {
                       >
                         {tx.type === 'credit' ? '+' : '−'}₹{tx.amount}
                       </p>
-                      <p className="text-[10px] text-white/40 capitalize mt-0.5">{tx.status}</p>
+                      <p className="text-[10px] text-white/85 capitalize mt-0.5">{tx.status}</p>
                     </div>
                   </div>
                 </DarkCard>
@@ -257,7 +257,7 @@ export default function EarningsPage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold">Next payout</p>
-              <p className="text-[11px] text-white/55">
+              <p className="text-[11px] text-white/85">
                 ₹{netEarnings.toLocaleString()} transferred in 2 days
               </p>
             </div>
@@ -288,7 +288,7 @@ export default function EarningsPage() {
               </div>
 
               <div className="rounded-2xl bg-[#13191C] text-white p-4">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                   Available to withdraw
                 </p>
                 <p className="text-3xl font-extrabold mt-1">

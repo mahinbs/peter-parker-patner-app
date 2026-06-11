@@ -83,7 +83,7 @@ export default function KYCStatusPage() {
               </div>
               <div>
                 <p className="text-sm font-bold">Reason</p>
-                <p className="text-[12px] text-white/70 mt-0.5">
+                <p className="text-[12px] text-white/85 mt-0.5">
                   {rejectionReason || 'Please check your documents and resubmit.'}
                 </p>
               </div>

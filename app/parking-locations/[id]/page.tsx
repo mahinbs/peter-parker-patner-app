@@ -201,7 +201,7 @@ export default function EditLocationPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold">Location status</p>
-                <p className="text-[11px] text-white/55 mt-0.5">
+                <p className="text-[11px] text-white/85 mt-0.5">
                   {isActive ? 'Active — accepting requests' : 'Inactive'}
                 </p>
               </div>

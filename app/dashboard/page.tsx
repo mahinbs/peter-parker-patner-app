@@ -200,7 +200,7 @@ export default function DashboardPage() {
     offline: {
       label: 'Offline',
       dot: 'bg-white/40',
-      pill: 'bg-white/10 text-white/70 border-white/15',
+      pill: 'bg-white/10 text-white/85 border-white/15',
     },
   };
   const current = statusConfig[currentStatus];
@@ -219,21 +219,25 @@ export default function DashboardPage() {
   return (
     <MobileContainer>
       <div className="p-4 space-y-4 pb-8">
-        {/* Status hero */}
+        {/* Welcome + location + status */}
         <DarkCard glow noPadding>
           <div className="relative p-5">
             <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-[#34C0CA]/30 to-[#66BD59]/30 rounded-full blur-3xl" />
             <div className="relative">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs text-white/55 uppercase tracking-wider">Status</p>
-                  <p className="text-2xl font-extrabold mt-1">{current.label}</p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-white/70">
+                    You're {current.label.toLowerCase()}
+                  </p>
+                  <p className="text-xl font-extrabold mt-1 text-white">
+                    Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+                  </p>
                 </div>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                     disabled={isStatusUpdating}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-full border ${current.pill} font-semibold text-xs transition active:scale-95 ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full border ${current.pill} font-bold text-xs transition active:scale-95 shrink-0 ${
                       isStatusUpdating ? 'opacity-60' : ''
                     }`}
                   >
@@ -250,7 +254,7 @@ export default function DashboardPage() {
                             key={opt}
                             onClick={() => handleStatusChange(opt)}
                             className={`w-full text-left px-3 py-2.5 flex items-center gap-2 text-sm ${
-                              currentStatus === opt ? 'bg-neutral-50 font-semibold' : ''
+                              currentStatus === opt ? 'bg-neutral-50 font-bold' : 'font-semibold'
                             }`}
                           >
                             <span className={`h-2 w-2 rounded-full ${c.dot}`} />
@@ -266,13 +270,13 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-white/5 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-white/55">City</p>
-                  <p className="text-sm font-semibold mt-0.5">{city}</p>
+                <div className="rounded-xl bg-white/10 p-3 border border-white/10">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-white/70">City</p>
+                  <p className="text-sm font-bold mt-0.5 text-white">{city}</p>
                 </div>
-                <div className="rounded-xl bg-white/5 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-white/55">Zone</p>
-                  <p className="text-sm font-semibold mt-0.5">{zone}</p>
+                <div className="rounded-xl bg-white/10 p-3 border border-white/10">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-white/70">Zone</p>
+                  <p className="text-sm font-bold mt-0.5 text-white">{zone}</p>
                 </div>
               </div>
             </div>
@@ -297,11 +301,11 @@ export default function DashboardPage() {
                   >
                     <Icon size={16} />
                   </div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                     {stat.label}
                   </p>
                 </div>
-                <p className="text-xl font-extrabold">{stat.value}</p>
+                <p className="text-xl font-extrabold text-white">{stat.value}</p>
               </DarkCard>
             );
           })}
@@ -317,14 +321,14 @@ export default function DashboardPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-bold truncate">{r.vehicleType}</p>
-                      <p className="text-[11px] text-white/55 mt-0.5 truncate">{r.userLocation}</p>
+                      <p className="text-[11px] text-white/85 mt-0.5 truncate">{r.userLocation}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-base font-extrabold text-[#66BD59]">₹{r.estimatedEarnings}</p>
-                      <p className="text-[10px] text-white/55 mt-0.5">{r.distance} away</p>
+                      <p className="text-[10px] text-white/85 mt-0.5">{r.distance} away</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-white/55 mt-2">
+                  <div className="flex items-center gap-2 text-xs text-white/85 mt-2">
                     <FiClock size={12} />
                     <span>{r.duration}</span>
                     <span className="ml-auto text-[#FFB627] font-semibold animate-pulse">
@@ -390,8 +394,8 @@ export default function DashboardPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-white/55 mt-0.5">Slot: {s.slotNumber}</p>
-                      <p className="text-[10px] text-white/40 mt-0.5">Started {s.startTime}</p>
+                      <p className="text-[11px] text-white/85 mt-0.5">Slot: {s.slotNumber}</p>
+                      <p className="text-[10px] text-white/85 mt-0.5">Started {s.startTime}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p
@@ -401,7 +405,7 @@ export default function DashboardPage() {
                       >
                         {s.status === 'valet_enroute_return' ? 'User waiting' : s.remainingTime}
                       </p>
-                      <p className="text-[10px] text-white/40 mt-0.5">
+                      <p className="text-[10px] text-white/85 mt-0.5">
                         {s.status === 'valet_enroute_return' ? 'at pickup' : 'remaining'}
                       </p>
                     </div>
@@ -439,7 +443,7 @@ export default function DashboardPage() {
                       <Icon size={18} />
                     </div>
                     <p className="flex-1 text-sm font-bold">{a.label}</p>
-                    <HiArrowRight className="w-4 h-4 text-white/40" />
+                    <HiArrowRight className="w-4 h-4 text-white/85" />
                   </div>
                 </DarkCard>
               );

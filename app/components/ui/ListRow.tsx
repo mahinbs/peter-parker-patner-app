@@ -44,10 +44,10 @@ export default function ListRow({
           {label}
         </p>
         {description && (
-          <p className="text-xs text-white/50 leading-tight mt-0.5">{description}</p>
+          <p className="text-xs text-white/85 leading-tight mt-0.5">{description}</p>
         )}
       </div>
-      {trailing ?? (onClick && <HiChevronRight className="w-5 h-5 text-white/40 shrink-0" />)}
+      {trailing ?? (onClick && <HiChevronRight className="w-5 h-5 text-white/85 shrink-0" />)}
     </>
   );
 

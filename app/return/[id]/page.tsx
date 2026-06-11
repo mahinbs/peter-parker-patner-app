@@ -87,12 +87,12 @@ export default function VehicleReturnPage() {
 
           <DarkCard>
             <div className="flex justify-between mb-2">
-              <span className="text-white/65 text-sm">Total charges</span>
+              <span className="text-white/85 text-sm">Total charges</span>
               <span className="text-xl font-extrabold bg-gradient-to-r from-[#34C0CA] to-[#66BD59] bg-clip-text text-transparent">
                 ₹{booking?.cost || 0}
               </span>
             </div>
-            <div className="flex justify-between text-xs text-white/55">
+            <div className="flex justify-between text-xs text-white/85">
               <span>Fuel difference</span>
               <span className="text-white">
                 {fuelDifference > 0 ? `−${fuelDifference}%` : 'No change'}
@@ -108,7 +108,7 @@ export default function VehicleReturnPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold">New damage reported</p>
-                  <p className="text-[12px] text-white/70 mt-0.5">{damageFound.join(', ')}</p>
+                  <p className="text-[12px] text-white/85 mt-0.5">{damageFound.join(', ')}</p>
                 </div>
               </div>
             </DarkCard>
@@ -200,7 +200,7 @@ export default function VehicleReturnPage() {
         <DarkCard>
           <div className="space-y-4">
             <div>
-              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/85 mb-2">
                 Fuel level
               </label>
               <div className="flex items-center gap-3">
@@ -215,12 +215,12 @@ export default function VehicleReturnPage() {
                 />
                 <span className="text-sm font-bold w-12 text-right">{fuelLevel}%</span>
               </div>
-              <p className="text-[10px] text-white/40 mt-1">
+              <p className="text-[10px] text-white/85 mt-1">
                 Initial {initialFuel}% · Used {fuelDifference}%
               </p>
             </div>
             <div>
-              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/55 mb-2">
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-white/85 mb-2">
                 Odometer (km)
               </label>
               <input
@@ -230,7 +230,7 @@ export default function VehicleReturnPage() {
                 placeholder="Current reading"
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-white placeholder-white/40 outline-none focus:border-[#34C0CA]"
               />
-              <p className="text-[10px] text-white/40 mt-1">Initial {initialOdometer} km</p>
+              <p className="text-[10px] text-white/85 mt-1">Initial {initialOdometer} km</p>
             </div>
           </div>
         </DarkCard>

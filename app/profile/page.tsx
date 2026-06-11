@@ -100,7 +100,7 @@ export default function ProfilePage() {
                       <Icon size={16} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-white/55">
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-white/85">
                         {row.label}
                       </p>
                       <p className="text-sm font-semibold truncate">{row.value || 'Not set'}</p>
@@ -125,7 +125,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold">{kyc.label}</p>
-                <p className="text-[11px] text-white/55">{kyc.desc}</p>
+                <p className="text-[11px] text-white/85">{kyc.desc}</p>
               </div>
             </div>
             {user?.kycStatus !== 'approved' && (
@@ -155,7 +155,7 @@ export default function ProfilePage() {
                   <FiSettings size={18} />
                 </div>
                 <p className="flex-1 text-sm font-semibold">Settings</p>
-                <FiChevronRight className="text-white/40" />
+                <FiChevronRight className="text-white/85" />
               </button>
               <button
                 onClick={() => router.push('/support')}
@@ -165,7 +165,7 @@ export default function ProfilePage() {
                   <FiHelpCircle size={18} />
                 </div>
                 <p className="flex-1 text-sm font-semibold">Support & help</p>
-                <FiChevronRight className="text-white/40" />
+                <FiChevronRight className="text-white/85" />
               </button>
             </div>
           </DarkCard>

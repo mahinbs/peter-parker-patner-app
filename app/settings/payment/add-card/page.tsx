@@ -83,7 +83,7 @@ export default function AddCardPage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold">Debit / credit card</p>
-              <p className="text-[11px] text-white/55">Used to receive payouts</p>
+              <p className="text-[11px] text-white/85">Used to receive payouts</p>
             </div>
           </div>
         </DarkCard>
@@ -168,9 +168,9 @@ export default function AddCardPage() {
           <DarkCard className="!p-3 mt-1">
             <div className="flex items-center gap-2 text-xs">
               <FiLock className="text-[#66BD59]" size={14} />
-              <span className="text-white/80 font-semibold">Encrypted & secure</span>
+              <span className="text-white/90 font-semibold">Encrypted & secure</span>
             </div>
-            <p className="text-[11px] text-white/55 mt-1">
+            <p className="text-[11px] text-white/85 mt-1">
               Your card details are encrypted. We never store your CVV.
             </p>
           </DarkCard>
